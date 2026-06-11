@@ -340,6 +340,55 @@
 
     </main>
 
+    <!-- VENTANA EMERGENTE DE VISTA PREVIA (MODAL) -->
+    <div id="preview-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-all duration-300">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl relative flex flex-col">
+            <!-- Barra superior del Modal -->
+            <div class="p-4 border-b border-slate-800/60 flex items-center justify-between bg-slate-950/40">
+                <div class="flex items-center gap-2 overflow-hidden mr-4">
+                    <i id="modal-icon" class="fa-solid fa-image text-blue-500 text-sm"></i>
+                    <span id="modal-title" class="text-xs font-bold text-slate-200 truncate">Vista Previa de Archivo</span>
+                </div>
+                <button onclick="closePreviewModal()" class="w-8 h-8 rounded-full bg-slate-850 text-slate-400 hover:text-white flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Contenedor del Archivo en Calidad Media -->
+            <div class="p-6 flex-grow flex items-center justify-center min-h-[250px] max-h-[70vh] overflow-y-auto bg-slate-950/30">
+                <!-- Indicador de Carga del recurso -->
+                <div id="modal-loader" class="absolute hidden flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-circle-notch animate-spin text-2xl text-blue-500"></i>
+                    <span class="text-[10px] text-slate-500">Cargando vista previa...</span>
+                </div>
+                
+                <!-- Contenedores según tipo de archivo -->
+                <img id="modal-image-preview" src="" alt="Vista previa" class="hidden max-h-[60vh] max-w-full rounded-lg object-contain shadow-md">
+                <video id="modal-video-preview" src="" controls class="hidden max-h-[60vh] max-w-full rounded-lg shadow-md"></video>
+                <audio id="modal-audio-preview" src="" controls class="hidden w-full max-w-md"></audio>
+                
+                <!-- Fallback si no es previsualizable directamente -->
+                <div id="modal-fallback" class="hidden text-center space-y-3 p-8">
+                    <div class="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 text-2xl mx-auto shadow-inner">
+                        <i class="fa-solid fa-circle-info"></i>
+                    </div>
+                    <p class="text-xs font-bold text-slate-300">Este archivo no soporta previsualización en vivo</p>
+                    <p class="text-[10px] text-slate-500 max-w-xs">Puedes descargarlo directamente a tu dispositivo usando el botón de abajo.</p>
+                </div>
+            </div>
+
+            <!-- Barra inferior con Acciones del Modal -->
+            <div class="p-4 border-t border-slate-800/60 flex items-center justify-end gap-3 bg-slate-950/40">
+                <button onclick="closePreviewModal()" class="px-4 py-2 border border-slate-800 hover:bg-slate-850 text-xs font-bold rounded-xl text-slate-300 transition-colors">
+                    Cerrar
+                </button>
+                <button id="modal-download-btn" onclick="" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition-all duration-200 flex items-center gap-1.5 shadow-lg shadow-blue-600/10 hover:shadow-blue-500/20">
+                    <i class="fa-solid fa-circle-down"></i> Guardar Archivo
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- TOAST NOTIFICATION HUB -->
     <div id="notification-toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
         <div class="glass-panel border-l-4 border-blue-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm">
@@ -760,7 +809,7 @@
 
             activeReceivedFilesCount++;
             playChimeSound();
-            showToast("¡Archivo Recibido!", `"${file.name}" listo para descargar.`, "indigo");
+            showToast("¡Archivo Recibido!", `"${file.name}" listo para descargar o previsualizar.`, "indigo");
 
             // Comportamiento de Auto-descarga
             if (document.getElementById('auto-download-toggle').checked) {
@@ -768,7 +817,7 @@
             }
 
             const card = document.createElement('div');
-            card.className = "flex items-center justify-between p-3.5 bg-slate-900/90 border border-slate-800/85 rounded-xl hover:border-slate-700/80 transition-all duration-300";
+            card.className = "flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-slate-900/90 border border-slate-800/85 rounded-xl hover:border-slate-700/80 transition-all duration-300 gap-3";
             
             const fileIconClass = getFileIcon(file.name);
             const sizeStr = formatBytes(file.size);
@@ -783,7 +832,10 @@
                         <p class="text-[10px] text-slate-500 mt-0.5">${sizeStr} &bull; ${new Date(file.timestamp).toLocaleTimeString()}</p>
                     </div>
                 </div>
-                <div>
+                <div class="flex items-center justify-end gap-2">
+                    <button onclick="openPreviewModal('${file.url}', '${file.name}')" class="bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white text-xs px-3 py-2 rounded-lg font-bold transition-all duration-200 flex items-center gap-1.5">
+                        <i class="fa-solid fa-eye"></i> Ver
+                    </button>
                     <button onclick="triggerDownload('${file.url}', '${file.name}', this)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3.5 py-2 rounded-lg font-bold transition-all duration-200 flex items-center gap-1.5 shadow-lg shadow-blue-600/10 hover:shadow-blue-500/20">
                         <i class="fa-solid fa-circle-down"></i> Descargar
                     </button>
@@ -791,6 +843,86 @@
             `;
             filesList.insertBefore(card, filesList.firstChild);
         }
+
+        // --- SISTEMA DE VISTA PREVIA (MODAL) ---
+        window.openPreviewModal = function(url, filename) {
+            const modal = document.getElementById('preview-modal');
+            const mTitle = document.getElementById('modal-title');
+            const mIcon = document.getElementById('modal-icon');
+            const mLoader = document.getElementById('modal-loader');
+            const mDownloadBtn = document.getElementById('modal-download-btn');
+
+            // Limpiar elementos de visualización anteriores
+            const mImage = document.getElementById('modal-image-preview');
+            const mVideo = document.getElementById('modal-video-preview');
+            const mAudio = document.getElementById('modal-audio-preview');
+            const mFallback = document.getElementById('modal-fallback');
+
+            mImage.classList.add('hidden');
+            mVideo.classList.add('hidden');
+            mAudio.classList.add('hidden');
+            mFallback.classList.add('hidden');
+
+            mTitle.textContent = filename;
+            mIcon.className = getFileIcon(filename) + " text-blue-500 text-sm";
+            mLoader.classList.remove('hidden');
+
+            // Configurar botón de descarga de la modal
+            mDownloadBtn.onclick = function(e) {
+                triggerDownload(url, filename, mDownloadBtn);
+            };
+
+            const ext = filename.split('.').pop().toLowerCase();
+
+            // Determinar tipo de previsualización
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+                mImage.src = url;
+                mImage.onload = () => {
+                    mLoader.classList.add('hidden');
+                    mImage.classList.remove('hidden');
+                };
+                mImage.onerror = () => {
+                    mLoader.classList.add('hidden');
+                    mFallback.classList.remove('hidden');
+                };
+            } else if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
+                mVideo.src = url;
+                mVideo.onloadeddata = () => {
+                    mLoader.classList.add('hidden');
+                    mVideo.classList.remove('hidden');
+                };
+                mVideo.onerror = () => {
+                    mLoader.classList.add('hidden');
+                    mFallback.classList.remove('hidden');
+                };
+            } else if (['mp3', 'wav', 'flac'].includes(ext)) {
+                mAudio.src = url;
+                mLoader.classList.add('hidden');
+                mAudio.classList.remove('hidden');
+            } else {
+                // Fallback para tipos de archivo no soportados
+                mLoader.classList.add('hidden');
+                mFallback.classList.remove('hidden');
+            }
+
+            modal.classList.remove('hidden');
+        };
+
+        window.closePreviewModal = function() {
+            const modal = document.getElementById('preview-modal');
+            modal.classList.add('hidden');
+
+            // Detener y vaciar fuentes para detener reproducción de audio/video y liberar RAM
+            document.getElementById('modal-image-preview').src = "";
+            const video = document.getElementById('modal-video-preview');
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+            const audio = document.getElementById('modal-audio-preview');
+            audio.pause();
+            audio.removeAttribute('src');
+            audio.load();
+        };
 
         // DESCARGA ASÍNCRONA POR BLOBS PARA DETENER LA APERTURA DE NUEVAS PESTAÑAS
         async function triggerDownload(url, filename, buttonElement) {
