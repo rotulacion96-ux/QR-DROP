@@ -3,834 +3,268 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR-Drop - Transferencia de Archivos Sin Límites</title>
-    <!-- Tailwind CSS for modern responsive styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font for elegant typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- QR Code Generator Library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-    <!-- FontAwesome for high-quality developer icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <title>QR-Drop - Transferencia Bidireccional</title>
+    <!-- Tailwind CSS para un diseño limpio y rápido -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- PeerJS para la conexión P2P -->
+    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <!-- QRCode.js para generar el código QR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background: radial-gradient(circle at 50% 50%, #0b0f19 0%, #030712 100%);
-        }
-        .glass-panel {
-            background: rgba(17, 24, 39, 0.7);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
-        .gradient-border {
-            position: relative;
-            border-radius: 1rem;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
-            padding: 1px;
-        }
-        .gradient-border-inner {
-            background: #030712;
-            border-radius: 15px;
-        }
-        /* Custom elegant scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.1);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(59, 130, 246, 0.3);
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(59, 130, 246, 0.5);
-        }
+        /* Transición suave para el cambio de tema */
+        body { transition: background-color 0.3s, color 0.3s; }
     </style>
 </head>
-<body class="min-h-screen text-slate-100 flex flex-col justify-between overflow-x-hidden antialiased">
+<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
 
-    <!-- Header Section -->
-    <header class="w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center z-10">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <i class="fa-solid fa-cloud-arrow-up text-white text-lg"></i>
-            </div>
-            <div>
-                <h1 class="text-xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">QR-Drop</h1>
-                <p class="text-[10px] text-blue-400 font-semibold tracking-wider uppercase">Nube Instantánea Sin Cables</p>
-            </div>
-        </div>
-        <div class="flex items-center gap-2 text-xs bg-slate-900/60 border border-slate-800 rounded-full px-3 py-1.5 shadow-md">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="status-pulse"></span>
-            <span class="text-slate-300 font-semibold" id="connection-status">Red Lista</span>
-        </div>
-    </header>
-
-    <!-- Main Content Container -->
-    <main class="w-full max-w-5xl mx-auto px-4 md:px-6 flex-grow flex items-center justify-center py-6">
-        
-        <!-- Loading Screen -->
-        <div id="loading-screen" class="text-center py-12 transition-all duration-300">
-            <div class="inline-block relative w-16 h-16 mb-4">
-                <div class="absolute inset-0 rounded-full border-4 border-slate-800"></div>
-                <div class="absolute inset-0 rounded-full border-4 border-t-blue-500 animate-spin"></div>
-            </div>
-            <p class="text-slate-400 text-sm">Inicializando protocolo de transmisión...</p>
-        </div>
-
-        <!-- Role Selection Screen -->
-        <div id="role-selection-screen" class="hidden w-full max-w-md mx-auto text-center z-10">
-            <div class="glass-panel p-8 rounded-2xl border border-slate-800 space-y-6 relative overflow-hidden shadow-2xl">
-                <div class="absolute -top-24 -left-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl"></div>
-                <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl"></div>
-                
-                <div>
-                    <h2 class="text-2xl font-extrabold text-white">¿Qué deseas hacer hoy?</h2>
-                    <p class="text-xs text-slate-400 mt-2">Conecta tu computadora y teléfono móvil de manera directa sin importar en qué red de internet estén.</p>
-                </div>
-
-                <div class="grid grid-cols-1 gap-4 pt-2">
-                    <!-- Option PC (Receiver) -->
-                    <button onclick="initAsReceiver()" class="flex items-center gap-4 p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 hover:border-blue-500/50 hover:bg-slate-900/60 transition-all duration-300 text-left group">
-                        <div class="w-12 h-12 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 text-blue-400 flex items-center justify-center text-xl shrink-0 transition-colors">
-                            <i class="fa-solid fa-desktop"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-bold text-slate-100">Recibir archivos en esta PC</p>
-                            <p class="text-[11px] text-slate-400 mt-0.5">Genera un código y un código QR para que tu celular te envíe archivos al instante.</p>
-                        </div>
-                    </button>
-
-                    <!-- Option Mobile (Sender) -->
-                    <button onclick="showJoinSessionScreen()" class="flex items-center gap-4 p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 hover:border-indigo-500/50 hover:bg-slate-900/60 transition-all duration-300 text-left group">
-                        <div class="w-12 h-12 rounded-lg bg-indigo-500/10 group-hover:bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl shrink-0 transition-colors">
-                            <i class="fa-solid fa-paper-plane"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-bold text-slate-100">Enviar archivos desde este celular</p>
-                            <p class="text-[11px] text-slate-400 mt-0.5">Escribe el código que ves en la PC para enlazarlos usando tus datos móviles.</p>
-                        </div>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Join Session (Enter Code) Screen -->
-        <div id="join-session-screen" class="hidden w-full max-w-md mx-auto text-center z-10">
-            <div class="glass-panel p-8 rounded-2xl border border-slate-800 space-y-6 shadow-2xl">
-                <div>
-                    <h2 class="text-xl font-bold text-white">Vincular con tu PC</h2>
-                    <p class="text-xs text-slate-400 mt-1">Ingresa el código de 6 caracteres que se muestra en la pantalla de tu computadora.</p>
-                </div>
-
-                <div class="space-y-4">
-                    <input type="text" id="join-code-input" class="w-full bg-slate-950/80 border border-slate-800 hover:border-slate-700 focus:border-blue-500 rounded-xl py-3.5 px-4 text-center text-2xl font-black tracking-widest text-white uppercase outline-none transition-colors" placeholder="CÓDIGO" maxlength="6">
-                    
-                    <button onclick="submitJoinCode()" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold rounded-xl py-3.5 text-sm shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 transition-all duration-300">
-                        Conectar ahora
-                    </button>
-                </div>
-
-                <div class="pt-2">
-                    <button onclick="showRoleSelection()" class="text-xs text-slate-500 hover:text-slate-300 transition-colors">
-                        <i class="fa-solid fa-arrow-left mr-1"></i> Volver atrás
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- PC (Receiver) Interface Grid -->
-        <div id="pc-interface" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch max-w-5xl">
-            
-            <!-- Left Side Panel: Access and Pairing Information -->
-            <div class="lg:col-span-5 flex flex-col items-center justify-center p-6 glass-panel rounded-2xl relative overflow-hidden shadow-2xl">
-                <div class="absolute -top-24 -left-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl"></div>
-                <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-500/10 rounded-full blur-3xl"></div>
-
-                <div class="z-10 text-center w-full">
-                    <span class="bg-blue-500/10 text-blue-400 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-blue-500/15">Código de Sincronización</span>
-                    
-                    <!-- Code Display -->
-                    <div class="my-5">
-                        <p class="text-[10px] text-slate-400 uppercase tracking-widest">Escribe esto en tu teléfono móvil:</p>
-                        <h3 id="session-code-display" class="text-5xl font-black tracking-widest bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent py-2">------</h3>
-                    </div>
-
-                    <!-- Scan Helper -->
-                    <div class="flex items-center justify-center gap-2 mb-4">
-                        <div class="h-[1px] bg-slate-800 flex-grow"></div>
-                        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-widest">O ESCANEA EL CÓDIGO QR</span>
-                        <div class="h-[1px] bg-slate-800 flex-grow"></div>
-                    </div>
-                    
-                    <!-- QR Container -->
-                    <div class="gradient-border max-w-[210px] mx-auto mb-4 hover:scale-[1.03] transition-transform duration-300 shadow-2xl">
-                        <div class="gradient-border-inner p-3 bg-white flex items-center justify-center rounded-xl">
-                            <canvas id="qr-canvas" class="max-w-full rounded-md"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Direct Link Link Copy -->
-                    <div class="text-center">
-                        <button onclick="copySessionLink()" class="inline-flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-blue-400 bg-slate-900/60 hover:bg-slate-900/100 border border-slate-800 px-3 py-2 rounded-lg transition-all duration-200 shadow-sm">
-                            <i class="fa-solid fa-copy"></i> Copiar enlace directo
-                        </button>
-                    </div>
-
-                    <!-- Connection Status Descriptor -->
-                    <div class="mt-6 pt-5 border-t border-slate-800/80 flex items-center justify-center gap-3">
-                        <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-xs text-slate-400 border border-slate-800" id="device-indicator">
-                            <i class="fa-solid fa-mobile-screen-button"></i>
-                        </div>
-                        <div class="text-left">
-                            <p class="text-xs font-bold" id="device-status-title">Esperando teléfono...</p>
-                            <p class="text-[10px] text-slate-500" id="device-status-desc font-medium">Introduce el código o escanea el QR desde tus datos</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Side Panel: Inbox & Downloads Panel -->
-            <div class="lg:col-span-7 flex flex-col p-6 glass-panel rounded-2xl relative overflow-hidden shadow-2xl">
-                <div class="absolute top-10 right-10 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
-                
-                <div class="flex justify-between items-center mb-6 z-10">
-                    <div>
-                        <span class="bg-indigo-500/10 text-indigo-400 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-indigo-500/15">Bandeja de Entrada</span>
-                        <h2 class="text-lg font-bold mt-4 text-slate-100">Archivos Recibidos</h2>
-                    </div>
-                    <!-- Clear list option -->
-                    <button id="clear-list-btn" onclick="clearReceivedFiles()" class="hidden text-xs text-slate-500 hover:text-red-400 transition-colors font-medium">
-                        <i class="fa-solid fa-trash-can mr-1"></i> Limpiar bandeja
-                    </button>
-                </div>
-
-                <!-- Empty State -->
-                <div id="receiver-empty-state" class="flex-grow flex flex-col items-center justify-center text-center py-12 z-10">
-                    <div class="w-16 h-16 rounded-2xl bg-slate-900/60 flex items-center justify-center border border-slate-800 mb-4 shadow-inner">
-                        <i class="fa-solid fa-file-circle-minus text-2xl text-slate-500"></i>
-                    </div>
-                    <p class="text-slate-300 font-bold text-sm">Tu bandeja está libre de archivos</p>
-                    <p class="text-slate-500 text-xs max-w-xs mt-2 leading-relaxed">Los archivos que cargues en tu celular aparecerán mágicamente aquí en tiempo real, incluso si estás usando datos celulares.</p>
-                </div>
-
-                <!-- Files Received List -->
-                <div id="receiver-files-list" class="hidden flex-grow space-y-3 overflow-y-auto max-h-[340px] pr-2 z-10">
-                    <!-- Dynamic File Cards injected here -->
-                </div>
-                
-                <!-- Quick Control Toggles -->
-                <div class="mt-6 pt-4 border-t border-slate-850 flex items-center justify-between text-[11px] text-slate-400">
-                    <span class="flex items-center gap-1.5 font-medium">
-                        <i class="fa-solid fa-bell text-blue-500 animate-pulse"></i> Alertas de recepción activadas
-                    </span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="auto-download-toggle" class="sr-only peer">
-                        <div class="w-9 h-5 bg-slate-850 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                        <span class="ml-2 font-bold text-slate-300 uppercase tracking-wider text-[9px]">Autodescarga</span>
-                    </label>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Mobile (Sender) Interface -->
-        <div id="mobile-interface" class="hidden w-full max-w-md mx-auto">
-            <div class="glass-panel rounded-2xl p-6 relative overflow-hidden shadow-2xl">
-                <div class="absolute -top-20 -right-20 w-44 h-44 bg-blue-500/10 rounded-full blur-2xl"></div>
-                <div class="absolute -bottom-20 -left-20 w-44 h-44 bg-indigo-500/10 rounded-full blur-2xl"></div>
-                
-                <div class="text-center mb-6 z-10 relative">
-                    <span class="bg-indigo-500/15 text-indigo-400 text-xs font-bold px-3 py-1.5 rounded-full border border-indigo-500/15">
-                        <i class="fa-solid fa-link mr-1"></i> Celular Vinculado a la PC
-                    </span>
-                    <h2 class="text-xl font-extrabold mt-4 text-white">Transmitir Archivos</h2>
-                    <p class="text-xs text-slate-400 mt-1">Sube cualquier archivo para mandarlo de inmediato a tu computadora sin importar tu red.</p>
-                </div>
-
-                <!-- Drag and Drop Zone -->
-                <div id="dropzone" class="border-2 border-dashed border-slate-850 hover:border-blue-500/80 rounded-xl p-8 text-center bg-slate-950/20 hover:bg-blue-500/5 transition-all duration-300 cursor-pointer mb-6 z-10 relative">
-                    <input type="file" id="file-input" class="hidden" />
-                    
-                    <div id="dropzone-idle">
-                        <div class="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-4 border border-blue-500/25">
-                            <i class="fa-solid fa-cloud-arrow-up text-xl text-blue-400"></i>
-                        </div>
-                        <p class="text-slate-200 font-bold text-sm">Selecciona un archivo</p>
-                        <p class="text-slate-500 text-[10px] mt-1.5 font-medium">Soporta fotos, vídeos, PDF, etc. de hasta 100MB</p>
-                    </div>
-
-                    <div id="dropzone-loading" class="hidden">
-                        <div class="relative w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                            <!-- SVG Circular Progress Bar -->
-                            <svg class="w-16 h-16 transform -rotate-90">
-                                <circle cx="32" cy="32" r="28" stroke="currentColor" class="text-slate-900" stroke-width="4" fill="transparent" />
-                                <circle cx="32" cy="32" r="28" stroke="currentColor" class="text-blue-500 transition-all duration-100" stroke-width="4" fill="transparent"
-                                    stroke-dasharray="175.9" stroke-dashoffset="175.9" id="progress-ring-circle" />
-                            </svg>
-                            <span class="absolute text-xs font-black text-blue-400" id="progress-percentage">0%</span>
-                        </div>
-                        <p class="text-slate-300 text-xs font-bold" id="upload-status-title">Subiendo archivo...</p>
-                        <p class="text-slate-500 text-[10px] mt-1" id="upload-status-details">Conectando con servidores seguros...</p>
-                    </div>
-                </div>
-
-                <!-- Upload Success Notification -->
-                <div id="upload-success-panel" class="hidden bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-center gap-3 mb-6 z-10 relative">
-                    <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
-                        <i class="fa-solid fa-circle-check"></i>
-                    </div>
-                    <div class="text-left flex-grow overflow-hidden">
-                        <p class="text-xs font-bold text-slate-100 truncate" id="success-filename">archivo.jpg</p>
-                        <p class="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">¡Transmitido a tu PC!</p>
-                    </div>
-                    <button onclick="resetDropzone()" class="text-[10px] font-bold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-850 px-3 py-1.5 rounded-lg border border-slate-800 transition-colors">
-                        Enviar otro
-                    </button>
-                </div>
-
-                <!-- Terminate Session -->
-                <div class="text-center">
-                    <button onclick="disconnectSession()" class="text-[10px] text-slate-500 hover:text-red-400 flex items-center justify-center gap-1.5 transition-colors mx-auto font-medium">
-                        <i class="fa-solid fa-unlink"></i> Desconectar de la PC
-                    </button>
-                </div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- Floating Toast Message Hub -->
-    <div id="notification-toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
-        <div class="glass-panel border-l-4 border-blue-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm">
-            <div class="w-8 h-8 rounded-full bg-blue-500/15 flex items-center justify-center text-blue-400 shrink-0" id="notification-icon">
-                <i class="fa-solid fa-info"></i>
-            </div>
-            <div>
-                <p class="text-xs font-bold text-slate-100" id="notification-title">Alerta</p>
-                <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed" id="notification-message">Contenido de la notificación.</p>
-            </div>
-        </div>
+    <!-- Selector de Tema (Esquina Superior Derecha) -->
+    <div class="absolute top-4 right-4">
+        <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-800 hover:scale-110 transition-transform cursor-pointer" title="Cambiar Tema">
+            <span id="theme-icon-dark" class="hidden">🌙</span>
+            <span id="theme-icon-light">☀️</span>
+        </button>
     </div>
 
-    <!-- Footer Area -->
-    <footer class="w-full text-center py-6 text-[10px] text-slate-600 border-t border-slate-950/40 z-10 bg-slate-950/20">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-2">
-            <p>&copy; 2026 QR-Drop. Transferencia rápida y segura en cualquier lugar.</p>
-            <div class="flex gap-4 font-semibold uppercase tracking-wider text-[9px]">
-                <span class="hover:text-slate-400 transition-colors"><i class="fa-solid fa-shield-halved mr-1 text-slate-500"></i> Archivos Temporales</span>
-                <span class="hover:text-slate-400 transition-colors"><i class="fa-solid fa-bolt mr-1 text-slate-500"></i> Zero-Config</span>
+    <main class="w-full max-w-md bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl space-y-6 text-center">
+        <header>
+            <h1 class="text-3xl font-extrabold tracking-tight text-indigo-600 dark:text-indigo-400">QR-Drop</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Transferencia local bidireccional P2P</p>
+        </header>
+
+        <!-- SECCIÓN 1: Generar QR (Esperando Conexión) -->
+        <div id="setup-section" class="space-y-4">
+            <div class="flex justify-center">
+                <div id="qrcode" class="p-4 bg-white rounded-xl shadow-md border border-gray-100 inline-block"></div>
+            </div>
+            <p class="text-sm font-medium animate-pulse text-indigo-500">Escanea este QR desde el otro dispositivo para conectar...</p>
+            <div class="text-xs text-gray-400 break-all bg-gray-100 dark:bg-gray-700 p-2 rounded">
+                Tu ID: <span id="my-id" class="font-mono">Generando...</span>
             </div>
         </div>
+
+        <!-- SECCIÓN 2: Panel de Control (Conectado) -->
+        <div id="transfer-section" class="hidden space-y-6">
+            <div class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 p-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+                <span>🔄</span> ¡Dispositivos Vinculados con Éxito!
+            </div>
+
+            <!-- Zona de Envío -->
+            <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors relative">
+                <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                <div class="space-y-2 pointer-events-none">
+                    <span class="text-3xl">📁</span>
+                    <p class="text-sm font-medium">Toca o arrastra un archivo aquí para enviarlo</p>
+                </div>
+            </div>
+
+            <!-- Progreso de Envío/Recepción -->
+            <div id="progress-container" class="hidden space-y-2 text-left">
+                <div class="flex justify-between text-xs font-semibold">
+                    <span id="progress-status">Transfiriendo...</span>
+                    <span id="progress-percent">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                    <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full w-0 transition-all duration-100"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-6 text-xs text-gray-400">
+        Seguro • Directo • Sin Servidores intermediarios
     </footer>
 
     <script>
-        // Core variables
-        let currentSessionId = "";
-        let isMobileMode = false;
-        let activeReceivedFilesCount = 0;
-        let eventSource = null;
-        
-        // Generate a cryptographically secure client ID to ignore own published signals
-        const clientId = Math.random().toString(36).substring(2, 15);
+        // --- GESTIÓN DE TEMA (CLARO / OSCURO) ---
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const darkIcon = document.getElementById('theme-icon-dark');
+        const lightIcon = document.getElementById('theme-icon-light');
 
-        window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const sessionIdFromUrl = urlParams.get('session');
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            darkIcon.classList.remove('hidden');
+            lightIcon.classList.add('hidden');
+        } else {
+            document.documentElement.classList.remove('dark');
+            darkIcon.classList.add('hidden');
+            lightIcon.classList.remove('hidden');
+        }
 
-            // Hide loading overlay
-            document.getElementById('loading-screen').classList.add('hidden');
-
-            if (sessionIdFromUrl) {
-                isMobileMode = true;
-                currentSessionId = sessionIdFromUrl.toLowerCase();
-                setupMobileMode();
+        themeToggleBtn.addEventListener('click', () => {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                darkIcon.classList.add('hidden');
+                lightIcon.classList.remove('hidden');
             } else {
-                showRoleSelection();
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                darkIcon.classList.remove('hidden');
+                lightIcon.classList.add('hidden');
             }
-        };
+        });
 
-        // Routing Views
-        function showRoleSelection() {
-            document.getElementById('role-selection-screen').classList.remove('hidden');
-            document.getElementById('join-session-screen').classList.add('hidden');
-            document.getElementById('pc-interface').classList.add('hidden');
-            document.getElementById('mobile-interface').classList.add('hidden');
-        }
+        // --- LÓGICA DE CONEXIÓN P2P (PEERJS) ---
+        let peer = null;
+        let conn = null;
+        let receivedChunks = [];
+        let incomingFileInfo = null;
 
-        function showJoinSessionScreen() {
-            document.getElementById('role-selection-screen').classList.add('hidden');
-            document.getElementById('join-session-screen').classList.remove('hidden');
-            document.getElementById('join-code-input').focus();
-        }
+        // Detectar si entramos con un ID de destino en la URL (?peer=ID)
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetPeerId = urlParams.get('peer');
 
-        // Generate clean alphanumeric short code
-        function generateRoomCode() {
-            const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-            let result = '';
-            for (let i = 0; i < 6; i++) {
-                result += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return result;
-        }
+        // Inicializar PeerJS
+        peer = new Peer();
 
-        // Initialize Universal SSE Relay Listener
-        function initSSERelay(sessionId) {
-            const topic = 'qrdrop_' + sessionId;
+        peer.on('open', (id) => {
+            document.getElementById('my-id').textContent = id;
             
-            // Close existing listeners
-            if (eventSource) {
-                eventSource.close();
+            if (targetPeerId) {
+                // Somos el dispositivo que escaneó: Nos conectamos al remitente
+                connectToPeer(targetPeerId);
+            } else {
+                // Somos el dispositivo origen: Generamos el QR con nuestra URL completa
+                const connectionUrl = `${window.location.origin}${window.location.pathname}?peer=${id}`;
+                new QRCode(document.getElementById("qrcode"), {
+                    text: connectionUrl,
+                    width: 200,
+                    height: 200,
+                    colorDark : "#4f46e5",
+                    colorLight : "#ffffff"
+                });
             }
+        });
 
-            // Subscribing to open SSE feed
-            eventSource = new EventSource(`https://ntfy.sh/${topic}/sse`);
-            
-            eventSource.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.message) {
-                        const payload = JSON.parse(data.message);
+        // Escuchar conexiones entrantes (El creador del QR recibe la llamada)
+        peer.on('connection', (connection) => {
+            conn = connection;
+            setupConnectionHandlers();
+        });
+
+        function connectToPeer(targetId) {
+            conn = peer.connect(targetId);
+            setupConnectionHandlers();
+        }
+
+        function setupConnectionHandlers() {
+            conn.on('open', () => {
+                // Intercambiar pantallas al conectar
+                document.getElementById('setup-section').classList.add('hidden');
+                document.getElementById('transfer-section').classList.remove('hidden');
+            });
+
+            conn.on('data', (data) => {
+                // Manejo de flujo de datos estructurado
+                if (data.type === 'metadata') {
+                    // Inicializar recepción de un archivo
+                    incomingFileInfo = data;
+                    receivedChunks = [];
+                    showProgress("Recibiendo: " + data.name);
+                } else if (data.type === 'chunk') {
+                    // Guardar fragmento binario
+                    receivedChunks.push(data.chunk);
+                    const percent = Math.round((receivedChunks.length / incomingFileInfo.totalChunks) * 100);
+                    updateProgress(percent);
+
+                    if (receivedChunks.length === incomingFileInfo.totalChunks) {
+                        // Descarga Directa Forzada usando Blobs asíncronos
+                        const blob = new Blob(receivedChunks, { type: incomingFileInfo.mime });
+                        const blobUrl = URL.createObjectURL(blob);
                         
-                        // Ignore signals generated by this tab
-                        if (payload.senderId === clientId) return;
-
-                        handleSignalMessage(payload);
+                        const downloadAnchor = document.createElement('a');
+                        downloadAnchor.href = blobUrl;
+                        downloadAnchor.download = incomingFileInfo.name;
+                        document.body.appendChild(downloadAnchor);
+                        downloadAnchor.click();
+                        
+                        // Limpieza inmediata del DOM y memoria
+                        document.body.removeChild(downloadAnchor);
+                        URL.revokeObjectURL(blobUrl);
+                        
+                        hideProgress();
+                        alert(`¡Archivo "${incomingFileInfo.name}" descargado con éxito!`);
                     }
-                } catch (e) {
-                    console.error("SSE Parse Error:", e);
                 }
-            };
+            });
 
-            eventSource.onerror = (err) => {
-                console.error("Relay connection interrupted. Reconnecting...", err);
-            };
+            conn.on('close', () => {
+                alert("Conexión perdida. Recargando la página.");
+                window.location.search = ""; // Limpiar parámetros y reiniciar
+            });
         }
 
-        // Publish event to the public Relay
-        async function publishSignal(payload) {
-            const topic = 'qrdrop_' + currentSessionId;
-            payload.senderId = clientId;
+        // --- MANEJO DE ENVÍO DE ARCHIVOS ---
+        const fileInput = document.getElementById('file-input');
+        const CHUNK_SIZE = 16384; // 16KB por fragmento para máxima estabilidad WebRTC
 
-            try {
-                await fetch(`https://ntfy.sh/${topic}`, {
-                    method: 'POST',
-                    body: JSON.stringify(payload),
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-            } catch (err) {
-                console.error("Failed to post relay signal:", err);
-            }
-        }
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file || !conn) return;
 
-        // Initialize PC Mode
-        async function initAsReceiver() {
-            document.getElementById('role-selection-screen').classList.add('hidden');
-            document.getElementById('pc-interface').classList.remove('hidden');
+            showProgress("Enviando: " + file.name);
 
-            currentSessionId = generateRoomCode();
-            document.getElementById('session-code-display').textContent = currentSessionId.toUpperCase();
-
-            // Set up clean shareable URL
-            const defaultUrl = window.location.origin + window.location.pathname + "?session=" + currentSessionId;
-            renderQR(defaultUrl);
-
-            // Establish real-time SSE relay listener
-            initSSERelay(currentSessionId);
-
-            window.copySessionLink = function() {
-                const tempInput = document.createElement('input');
-                tempInput.value = defaultUrl;
-                document.body.appendChild(tempInput);
-                tempInput.select();
-                try {
-                    document.execCommand('copy');
-                    showToast("Enlace Copiado", "El enlace de acceso se copió con éxito.", "blue");
-                } catch (e) {
-                    console.error(e);
-                }
-                document.body.removeChild(tempInput);
-            };
-
-            window.clearReceivedFiles = function() {
-                if(confirm("¿Estás seguro de que deseas limpiar la lista de archivos?")) {
-                    const filesList = document.getElementById('receiver-files-list');
-                    filesList.innerHTML = "";
-                    activeReceivedFilesCount = 0;
-                    document.getElementById('receiver-empty-state').classList.remove('hidden');
-                    document.getElementById('receiver-files-list').classList.add('hidden');
-                    document.getElementById('clear-list-btn').classList.add('hidden');
-                    showToast("Bandeja Vacía", "Se borró el registro de archivos local.", "blue");
-                }
-            };
-        }
-
-        // Submit Pairing Code from Mobile Phone
-        async function submitJoinCode() {
-            const rawCode = document.getElementById('join-code-input').value.trim();
-            if (!rawCode) {
-                showToast("Falta el código", "Por favor introduce el código de la PC.", "red");
-                return;
-            }
-
-            currentSessionId = rawCode.toLowerCase();
-            isMobileMode = true;
-
-            document.getElementById('join-session-screen').classList.add('hidden');
-            setupMobileMode();
-        }
-
-        // Initialize Mobile Interface
-        function setupMobileMode() {
-            document.getElementById('mobile-interface').classList.remove('hidden');
+            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
             
-            // Connect to message relay
-            initSSERelay(currentSessionId);
+            // Enviar Metadatos primero
+            conn.send({
+                type: 'metadata',
+                name: file.name,
+                mime: file.type,
+                totalChunks: totalChunks
+            });
 
-            // Send handshake signal to notify the PC
-            setTimeout(() => {
-                publishSignal({ type: 'handshake', device: 'mobile' });
-            }, 800);
+            let currentChunk = 0;
+            const fileReader = new FileReader();
 
-            const dropzone = document.getElementById('dropzone');
-            const fileInput = document.getElementById('file-input');
+            fileReader.onload = (event) => {
+                conn.send({
+                    type: 'chunk',
+                    chunk: event.target.result
+                });
 
-            dropzone.onclick = () => fileInput.click();
-            fileInput.onchange = (e) => handleFileSelection(e.target.files[0]);
+                currentChunk++;
+                const percent = Math.round((currentChunk / totalChunks) * 100);
+                updateProgress(percent);
 
-            // Setup Drag & Drop visual state mechanics
-            dropzone.ondragover = (e) => {
-                e.preventDefault();
-                dropzone.classList.add('border-blue-500', 'bg-blue-500/5');
-            };
-            dropzone.ondragleave = () => {
-                dropzone.classList.remove('border-blue-500', 'bg-blue-500/5');
-            };
-            dropzone.ondrop = (e) => {
-                e.preventDefault();
-                dropzone.classList.remove('border-blue-500', 'bg-blue-500/5');
-                if (e.dataTransfer.files.length > 0) {
-                    handleFileSelection(e.dataTransfer.files[0]);
-                }
-            };
-        }
-
-        // Process messages received from the SSE network channel
-        function handleSignalMessage(payload) {
-            if (payload.type === 'handshake') {
-                updateDeviceStatus(true);
-                // Confirm handshake back to mobile
-                publishSignal({ type: 'handshake_ack' });
-            } 
-            else if (payload.type === 'handshake_ack') {
-                showToast("¡Enlazados!", "Conexión en la nube establecida con la PC.", "emerald");
-            }
-            else if (payload.type === 'file_transmitted') {
-                if (!isMobileMode) {
-                    handleIncomingFile(payload.file);
-                }
-            }
-        }
-
-        // File Upload Handlers (Client to tmpfiles.org)
-        function handleFileSelection(file) {
-            if (!file) return;
-
-            const maxLimit = 100 * 1024 * 1024; // 100MB Limit
-            if (file.size > maxLimit) {
-                showToast("Archivo Excesivo", "El límite de transferencia es de 100MB.", "red");
-                return;
-            }
-
-            document.getElementById('dropzone-idle').classList.add('hidden');
-            document.getElementById('dropzone-loading').classList.remove('hidden');
-
-            const xhr = new XMLHttpRequest();
-            const formData = new FormData();
-            formData.append('file', file);
-
-            xhr.upload.onprogress = (e) => {
-                if (e.lengthComputable) {
-                    const pct = Math.round((e.loaded / e.total) * 100);
-                    updateUploadProgress(pct);
-                }
-            };
-
-            xhr.onload = async () => {
-                if (xhr.status === 200) {
-                    try {
-                        const response = JSON.parse(xhr.responseText);
-                        if (response.status === 'success' && response.data && response.data.url) {
-                            // Convert standard redirect link to a direct forced download link
-                            const directDownloadUrl = response.data.url.replace("tmpfiles.org/", "tmpfiles.org/dl/");
-                            
-                            const filePayload = {
-                                id: 'f_' + Math.random().toString(36).substring(2, 11),
-                                name: file.name,
-                                size: file.size,
-                                url: directDownloadUrl,
-                                timestamp: Date.now()
-                            };
-
-                            // Publish file payload globally to listening PC
-                            await publishSignal({
-                                type: 'file_transmitted',
-                                file: filePayload
-                            });
-
-                            showUploadSuccess(file.name);
-                        } else {
-                            throw new Error("Respuesta de carga inválida.");
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        showUploadError("No se pudo obtener el enlace temporal.");
-                    }
+                if (currentChunk < totalChunks) {
+                    loadNextChunk();
                 } else {
-                    showUploadError(`Fallo de transmisión (${xhr.status}).`);
+                    hideProgress();
+                    fileInput.value = ""; // Reset del input
+                    alert("¡Archivo enviado de forma segura!");
                 }
             };
 
-            xhr.onerror = () => {
-                showUploadError("Error en la conexión. Revisa tu cobertura.");
-            };
-
-            xhr.open('POST', 'https://tmpfiles.org/api/v1/upload', true);
-            xhr.send(formData);
-        }
-
-        // Circular Loading UI Progress ring updater
-        function updateUploadProgress(percent) {
-            document.getElementById('progress-percentage').textContent = percent + "%";
-            const circle = document.getElementById('progress-ring-circle');
-            const radius = circle.r.baseVal.value;
-            const circumference = radius * 2 * Math.PI;
-            
-            const offset = circumference - (percent / 100) * circumference;
-            circle.style.strokeDasharray = `${circumference} ${circumference}`;
-            circle.style.strokeDashoffset = offset;
-
-            if (percent === 100) {
-                document.getElementById('upload-status-title').textContent = "Sincronizando con la PC...";
-                document.getElementById('upload-status-details').textContent = "Cerrando conexión directa...";
-            } else {
-                document.getElementById('upload-status-title').textContent = "Transmitiendo...";
-                document.getElementById('upload-status-details').textContent = "Por favor, mantén esta ventana abierta.";
-            }
-        }
-
-        function showUploadSuccess(filename) {
-            document.getElementById('dropzone').classList.add('hidden');
-            document.getElementById('upload-success-panel').classList.remove('hidden');
-            document.getElementById('success-filename').textContent = filename;
-            showToast("Transmitido", `"${filename}" llegó a la PC.`, "emerald");
-        }
-
-        function showUploadError(msg) {
-            showToast("Fallo de subida", msg, "red");
-            resetDropzone();
-        }
-
-        window.resetDropzone = function() {
-            document.getElementById('upload-success-panel').classList.add('hidden');
-            document.getElementById('dropzone').classList.remove('hidden');
-            document.getElementById('dropzone-idle').classList.remove('hidden');
-            document.getElementById('dropzone-loading').classList.add('hidden');
-            document.getElementById('file-input').value = "";
-        };
-
-        // Process file arrived on the PC client
-        function handleIncomingFile(file) {
-            const emptyState = document.getElementById('receiver-empty-state');
-            const filesList = document.getElementById('receiver-files-list');
-            const clearBtn = document.getElementById('clear-list-btn');
-
-            emptyState.classList.add('hidden');
-            filesList.classList.remove('hidden');
-            clearBtn.classList.remove('hidden');
-
-            activeReceivedFilesCount++;
-            playChimeSound();
-            showToast("¡Archivo Recibido!", `"${file.name}" se agregó a la lista.`, "indigo");
-
-            // Auto-Download trigger
-            if (document.getElementById('auto-download-toggle').checked) {
-                triggerDownload(file.url, file.name);
+            function loadNextChunk() {
+                const start = currentChunk * CHUNK_SIZE;
+                const end = Math.min(start + CHUNK_SIZE, file.size);
+                const blobSlice = file.slice(start, end);
+                fileReader.readAsArrayBuffer(blobSlice);
             }
 
-            const card = document.createElement('div');
-            card.className = "flex items-center justify-between p-3.5 bg-slate-900/90 border border-slate-800/80 rounded-xl hover:border-slate-700 transition-all duration-300";
-            
-            const fileIconClass = getFileIcon(file.name);
-            const sizeStr = formatBytes(file.size);
+            loadNextChunk();
+        });
 
-            card.innerHTML = `
-                <div class="flex items-center gap-3 overflow-hidden">
-                    <div class="w-10 h-10 rounded-lg bg-slate-850 flex items-center justify-center text-blue-400 shrink-0 border border-slate-800">
-                        <i class="${fileIconClass} text-lg"></i>
-                    </div>
-                    <div class="text-left overflow-hidden font-medium">
-                        <p class="text-xs font-bold text-slate-100 truncate pr-4">${escapeHtml(file.name)}</p>
-                        <p class="text-[10px] text-slate-500 mt-0.5">${sizeStr} &bull; ${new Date(file.timestamp).toLocaleTimeString()}</p>
-                    </div>
-                </div>
-                <div>
-                    <button onclick="triggerDownload('${file.url}', '${file.name}')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-2 rounded-lg font-bold transition-all duration-200 flex items-center gap-1.5 shadow-lg shadow-blue-600/10 hover:shadow-blue-500/20">
-                        <i class="fa-solid fa-circle-down"></i> Descargar
-                    </button>
-                </div>
-            `;
-            filesList.insertBefore(card, filesList.firstChild);
+        // --- FUNCIONES AUXILIARES DE INTERFAZ ---
+        const progressContainer = document.getElementById('progress-container');
+        const progressStatus = document.getElementById('progress-status');
+        const progressPercent = document.getElementById('progress-percent');
+        const progressBar = document.getElementById('progress-bar');
+
+        function showProgress(statusText) {
+            progressContainer.classList.remove('hidden');
+            progressStatus.textContent = statusText;
+            updateProgress(0);
         }
 
-        function triggerDownload(url, filename) {
-            const anchor = document.createElement('a');
-            anchor.href = url;
-            anchor.target = "_blank";
-            anchor.download = filename;
-            document.body.appendChild(anchor);
-            anchor.click();
-            document.body.removeChild(anchor);
+        function updateProgress(percent) {
+            progressPercent.textContent = percent + "%";
+            progressBar.style.width = percent + "%";
         }
 
-        // Play futuristic synthesizer chime sound using pure native Web Audio API
-        function playChimeSound() {
-            try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                
-                osc.type = 'sine';
-                // Play chord notes sequentially (arpeggio)
-                osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-                osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); // E5
-                osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2); // G5
-                osc.frequency.setValueAtTime(1046.50, ctx.currentTime + 0.3); // C6
-                
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
-                
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                
-                osc.start();
-                osc.stop(ctx.currentTime + 0.6);
-            } catch (err) {
-                console.debug("Web Audio Synthesizer blocked by browser interaction policy.");
-            }
-        }
-
-        // UI Updates for Pairing Devices
-        function updateDeviceStatus(isConnected) {
-            const title = document.getElementById('device-status-title');
-            const desc = document.getElementById('device-status-desc');
-            const indicator = document.getElementById('device-indicator');
-
-            if (isConnected) {
-                title.textContent = "Celular Sincronizado";
-                title.classList.add('text-emerald-400');
-                if(desc) desc.textContent = "Listo para transferir archivos en la nube.";
-                indicator.className = "w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-xs text-emerald-400 animate-pulse border border-emerald-500/20";
-                indicator.innerHTML = '<i class="fa-solid fa-satellite-dish"></i>';
-            }
-        }
-
-        // Render clean responsive QR Code
-        function renderQR(urlText) {
-            try {
-                new QRious({
-                    element: document.getElementById('qr-canvas'),
-                    value: urlText,
-                    size: 200,
-                    background: '#ffffff',
-                    foreground: '#0b0f19'
-                });
-            } catch (err) {
-                console.error("Failed to build QR Code canvas:", err);
-            }
-        }
-
-        // Disconnect Mobile Session and Reload App State
-        function disconnectSession() {
-            if(confirm("¿Estás seguro de que deseas cerrar esta sesión?")) {
-                if (eventSource) eventSource.close();
-                window.location.href = window.location.origin + window.location.pathname;
-            }
-        }
-
-        // Format Byte Sizes
-        function formatBytes(bytes, decimals = 2) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const dm = decimals < 0 ? 0 : decimals;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-        }
-
-        // Get Modern File Icon based on extension
-        function getFileIcon(filename) {
-            const ext = filename.split('.').pop().toLowerCase();
-            switch(ext) {
-                case 'pdf': return 'fa-solid fa-file-pdf';
-                case 'jpg': case 'jpeg': case 'png': case 'gif': case 'webp': case 'svg': return 'fa-solid fa-file-image';
-                case 'mp4': case 'mkv': case 'avi': case 'mov': return 'fa-solid fa-file-video';
-                case 'mp3': case 'wav': case 'ogg': case 'flac': return 'fa-solid fa-file-audio';
-                case 'zip': case 'rar': case 'tar': case 'gz': return 'fa-solid fa-file-zipper';
-                case 'doc': case 'docx': return 'fa-solid fa-file-word';
-                case 'xls': case 'xlsx': return 'fa-solid fa-file-excel';
-                case 'txt': case 'md': return 'fa-solid fa-file-lines';
-                default: return 'fa-solid fa-file';
-            }
-        }
-
-        // Elegant Toast Message triggers
-        function showToast(title, message, themeColor = "blue") {
-            const toast = document.getElementById('notification-toast');
-            const tTitle = document.getElementById('notification-title');
-            const tMsg = document.getElementById('notification-message');
-            const tIcon = document.getElementById('notification-icon');
-
-            tTitle.textContent = title;
-            tMsg.textContent = message;
-
-            toast.className = "fixed bottom-6 right-6 z-50 transform transition-all duration-300 pointer-events-none";
-            tIcon.className = "w-8 h-8 rounded-full flex items-center justify-center shrink-0";
-
-            if (themeColor === "red") {
-                toast.classList.add('translate-y-0', 'opacity-100');
-                toast.firstChild.className = "glass-panel border-l-4 border-red-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
-                tIcon.classList.add('bg-red-500/15', 'text-red-400');
-                tIcon.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
-            } else if (themeColor === "emerald") {
-                toast.classList.add('translate-y-0', 'opacity-100');
-                toast.firstChild.className = "glass-panel border-l-4 border-emerald-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
-                tIcon.classList.add('bg-emerald-500/15', 'text-emerald-400');
-                tIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
-            } else if (themeColor === "indigo") {
-                toast.classList.add('translate-y-0', 'opacity-100');
-                toast.firstChild.className = "glass-panel border-l-4 border-indigo-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
-                tIcon.classList.add('bg-indigo-500/15', 'text-indigo-400');
-                tIcon.innerHTML = '<i class="fa-solid fa-satellite-dish"></i>';
-            } else {
-                toast.classList.add('translate-y-0', 'opacity-100');
-                toast.firstChild.className = "glass-panel border-l-4 border-blue-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
-                tIcon.classList.add('bg-blue-500/15', 'text-blue-400');
-                tIcon.innerHTML = '<i class="fa-solid fa-info"></i>';
-            }
-
-            setTimeout(() => {
-                toast.classList.remove('translate-y-0', 'opacity-100');
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 4000);
-        }
-
-        function escapeHtml(str) {
-            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        function hideProgress() {
+            progressContainer.classList.add('hidden');
         }
     </script>
 </body>
