@@ -1,270 +1,972 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR-Drop - Transferencia Bidireccional</title>
-    <!-- Tailwind CSS para un diseño limpio y rápido -->
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- PeerJS para la conexión P2P -->
-    <script src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
-    <!-- QRCode.js para generar el código QR -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <style>
-        /* Transición suave para el cambio de tema */
-        body { transition: background-color 0.3s, color 0.3s; }
-    </style>
-</head>
-<body class="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
-
-    <!-- Selector de Tema (Esquina Superior Derecha) -->
-    <div class="absolute top-4 right-4">
-        <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-800 hover:scale-110 transition-transform cursor-pointer" title="Cambiar Tema">
-            <span id="theme-icon-dark" class="hidden">🌙</span>
-            <span id="theme-icon-light">☀️</span>
-        </button>
-    </div>
-
-    <main class="w-full max-w-md bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-xl space-y-6 text-center">
-        <header>
-            <h1 class="text-3xl font-extrabold tracking-tight text-indigo-600 dark:text-indigo-400">QR-Drop</h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Transferencia local bidireccional P2P</p>
-        </header>
-
-        <!-- SECCIÓN 1: Generar QR (Esperando Conexión) -->
-        <div id="setup-section" class="space-y-4">
-            <div class="flex justify-center">
-                <div id="qrcode" class="p-4 bg-white rounded-xl shadow-md border border-gray-100 inline-block"></div>
-            </div>
-            <p class="text-sm font-medium animate-pulse text-indigo-500">Escanea este QR desde el otro dispositivo para conectar...</p>
-            <div class="text-xs text-gray-400 break-all bg-gray-100 dark:bg-gray-700 p-2 rounded">
-                Tu ID: <span id="my-id" class="font-mono">Generando...</span>
-            </div>
-        </div>
-
-        <!-- SECCIÓN 2: Panel de Control (Conectado) -->
-        <div id="transfer-section" class="hidden space-y-6">
-            <div class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 p-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
-                <span>🔄</span> ¡Dispositivos Vinculados con Éxito!
-            </div>
-
-            <!-- Zona de Envío -->
-            <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-4 hover:border-indigo-500 dark:hover:border-indigo-400 transition-colors relative">
-                <input type="file" id="file-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
-                <div class="space-y-2 pointer-events-none">
-                    <span class="text-3xl">📁</span>
-                    <p class="text-sm font-medium">Toca o arrastra un archivo aquí para enviarlo</p>
-                </div>
-            </div>
-
-            <!-- Progreso de Envío/Recepción -->
-            <div id="progress-container" class="hidden space-y-2 text-left">
-                <div class="flex justify-between text-xs font-semibold">
-                    <span id="progress-status">Transfiriendo...</span>
-                    <span id="progress-percent">0%</span>
-                </div>
-                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-                    <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full w-0 transition-all duration-100"></div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <footer class="mt-6 text-xs text-gray-400">
-        Seguro • Directo • Sin Servidores intermediarios
-    </footer>
-
+    <title>QR-Drop - Transferencia Bidireccional de Archivos</title>
+    <!-- Tailwind CSS para diseño moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuración dinámica de Tailwind para Modo Claro/Oscuro -->
     <script>
-        // --- GESTIÓN DE TEMA (CLARO / OSCURO) ---
-        const themeToggleBtn = document.getElementById('theme-toggle');
-        const darkIcon = document.getElementById('theme-icon-dark');
-        const lightIcon = document.getElementById('theme-icon-light');
-
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-            darkIcon.classList.remove('hidden');
-            lightIcon.classList.add('hidden');
-        } else {
-            document.documentElement.classList.remove('dark');
-            darkIcon.classList.add('hidden');
-            lightIcon.classList.remove('hidden');
-        }
-
-        themeToggleBtn.addEventListener('click', () => {
-            if (document.documentElement.classList.contains('dark')) {
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-                darkIcon.classList.add('hidden');
-                lightIcon.classList.remove('hidden');
-            } else {
-                document.documentElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-                darkIcon.classList.remove('hidden');
-                lightIcon.classList.add('hidden');
-            }
-        });
-
-        // --- LÓGICA DE CONEXIÓN P2P (PEERJS) ---
-        let peer = null;
-        let conn = null;
-        let receivedChunks = [];
-        let incomingFileInfo = null;
-
-        // Detectar si entramos con un ID de destino en la URL (?peer=ID)
-        const urlParams = new URLSearchParams(window.location.search);
-        const targetPeerId = urlParams.get('peer');
-
-        // Inicializar PeerJS
-        peer = new Peer();
-
-        peer.on('open', (id) => {
-            document.getElementById('my-id').textContent = id;
-            
-            if (targetPeerId) {
-                // Somos el dispositivo que escaneó: Nos conectamos al remitente
-                connectToPeer(targetPeerId);
-            } else {
-                // Somos el dispositivo origen: Generamos el QR con nuestra URL completa
-                const connectionUrl = `${window.location.origin}${window.location.pathname}?peer=${id}`;
-                new QRCode(document.getElementById("qrcode"), {
-                    text: connectionUrl,
-                    width: 200,
-                    height: 200,
-                    colorDark : "#4f46e5",
-                    colorLight : "#ffffff"
-                });
-            }
-        });
-
-        // Escuchar conexiones entrantes (El creador del QR recibe la llamada)
-        peer.on('connection', (connection) => {
-            conn = connection;
-            setupConnectionHandlers();
-        });
-
-        function connectToPeer(targetId) {
-            conn = peer.connect(targetId);
-            setupConnectionHandlers();
-        }
-
-        function setupConnectionHandlers() {
-            conn.on('open', () => {
-                // Intercambiar pantallas al conectar
-                document.getElementById('setup-section').classList.add('hidden');
-                document.getElementById('transfer-section').classList.remove('hidden');
-            });
-
-            conn.on('data', (data) => {
-                // Manejo de flujo de datos estructurado
-                if (data.type === 'metadata') {
-                    // Inicializar recepción de un archivo
-                    incomingFileInfo = data;
-                    receivedChunks = [];
-                    showProgress("Recibiendo: " + data.name);
-                } else if (data.type === 'chunk') {
-                    // Guardar fragmento binario
-                    receivedChunks.push(data.chunk);
-                    const percent = Math.round((receivedChunks.length / incomingFileInfo.totalChunks) * 100);
-                    updateProgress(percent);
-
-                    if (receivedChunks.length === incomingFileInfo.totalChunks) {
-                        // Descarga Directa Forzada usando Blobs asíncronos
-                        const blob = new Blob(receivedChunks, { type: incomingFileInfo.mime });
-                        const blobUrl = URL.createObjectURL(blob);
-                        
-                        const downloadAnchor = document.createElement('a');
-                        downloadAnchor.href = blobUrl;
-                        downloadAnchor.download = incomingFileInfo.name;
-                        document.body.appendChild(downloadAnchor);
-                        downloadAnchor.click();
-                        
-                        // Limpieza inmediata del DOM y memoria
-                        document.body.removeChild(downloadAnchor);
-                        URL.revokeObjectURL(blobUrl);
-                        
-                        hideProgress();
-                        alert(`¡Archivo "${incomingFileInfo.name}" descargado con éxito!`);
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8'
+                        }
                     }
                 }
-            });
+            }
+        }
+    </script>
+    <!-- Tipografía Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Generador de Código QR rápido -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <!-- Iconos de FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        /* Fondos responsivos según el modo actual */
+        body.dark-mode {
+            background: radial-gradient(circle at 50% 50%, #0b0f19 0%, #030712 100%);
+        }
+        body.light-mode {
+            background: radial-gradient(circle at 50% 50%, #f8fafc 0%, #e2e8f0 100%);
+        }
+        .glass-panel {
+            backdrop-filter: blur(16px);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        .dark-mode .glass-panel {
+            background: rgba(17, 24, 39, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .light-mode .glass-panel {
+            background: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(15, 23, 42, 0.08);
+        }
+        .gradient-border {
+            position: relative;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+            padding: 1px;
+        }
+        .gradient-border-inner {
+            border-radius: 15px;
+            transition: background 0.3s ease;
+        }
+        .dark-mode .gradient-border-inner {
+            background: #030712;
+        }
+        .light-mode .gradient-border-inner {
+            background: #ffffff;
+        }
+        /* Personalización de scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(59, 130, 246, 0.3);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(59, 130, 246, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-100 dark-mode flex flex-col justify-between overflow-x-hidden antialiased">
 
-            conn.on('close', () => {
-                alert("Conexión perdida. Recargando la página.");
-                window.location.search = ""; // Limpiar parámetros y reiniciar
-            });
+    <!-- CABECERA -->
+    <header class="w-full max-w-7xl mx-auto px-6 py-5 flex justify-between items-center z-10">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <i class="fa-solid fa-arrows-rotate text-white text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-black tracking-tight class-theme-title bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent" id="app-brand-title">QR-Drop</h1>
+                <p class="text-[10px] text-blue-500 dark:text-blue-400 font-semibold tracking-wider uppercase">Canal Bidireccional Nube</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-3">
+            <!-- Botón de Modo Día / Noche -->
+            <button onclick="toggleTheme()" class="w-9 h-9 rounded-lg flex items-center justify-center border border-slate-800 dark:border-slate-800 bg-slate-900/40 text-slate-400 hover:text-white hover:bg-slate-900/80 transition-all duration-200" id="theme-btn">
+                <i class="fa-solid fa-sun text-sm" id="theme-icon"></i>
+            </button>
+
+            <!-- Estado de Red -->
+            <div class="flex items-center gap-2 text-xs bg-slate-900/60 border border-slate-800 rounded-full px-3 py-1.5 shadow-md" id="status-badge">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="status-pulse"></span>
+                <span class="text-slate-300 font-semibold" id="connection-status">Red Lista</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENEDOR CENTRAL DE LA APLICACIÓN -->
+    <main class="w-full max-w-5xl mx-auto px-4 md:px-6 flex-grow flex items-center justify-center py-6">
+        
+        <!-- Pantalla de Carga Inicial -->
+        <div id="loading-screen" class="text-center py-12 transition-all duration-300">
+            <div class="inline-block relative w-16 h-16 mb-4">
+                <div class="absolute inset-0 rounded-full border-4 border-slate-800"></div>
+                <div class="absolute inset-0 rounded-full border-4 border-t-blue-500 animate-spin"></div>
+            </div>
+            <p class="text-slate-400 text-sm" id="loading-text">Cargando módulos de transmisión bidireccional...</p>
+        </div>
+
+        <!-- Pantalla de Selección de Rol (PC / Celular) -->
+        <div id="role-selection-screen" class="hidden w-full max-w-md mx-auto text-center z-10">
+            <div class="glass-panel p-8 rounded-2xl space-y-6 relative overflow-hidden shadow-2xl">
+                <div class="absolute -top-24 -left-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl"></div>
+                <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl"></div>
+                
+                <div>
+                    <h2 class="text-2xl font-extrabold theme-text">¿Qué deseas hacer hoy?</h2>
+                    <p class="text-xs text-slate-400 mt-2">QR-Drop permite enviar y recibir archivos de forma simultánea entre tu computadora y teléfono móvil sin importar la red.</p>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 pt-2">
+                    <!-- Botón PC (Crea sala) -->
+                    <button onclick="initAsPC()" class="flex items-center gap-4 p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 hover:border-blue-500/50 hover:bg-slate-900/60 transition-all duration-300 text-left group">
+                        <div class="w-12 h-12 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 text-blue-400 flex items-center justify-center text-xl shrink-0 transition-colors">
+                            <i class="fa-solid fa-desktop"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold theme-text-item">Iniciar Sala (Desde mi PC)</p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Genera un código QR interactivo y espera a que tu celular se conecte de forma remota.</p>
+                        </div>
+                    </button>
+
+                    <!-- Botón Móvil (Se une a sala) -->
+                    <button onclick="showJoinSessionScreen()" class="flex items-center gap-4 p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 hover:border-indigo-500/50 hover:bg-slate-900/60 transition-all duration-300 text-left group">
+                        <div class="w-12 h-12 rounded-lg bg-indigo-500/10 group-hover:bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl shrink-0 transition-colors">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold theme-text-item">Unirme a una Sala (Desde mi Celular)</p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Ingresa el código o escanea para unirte a la sesión bidireccional desde cualquier red.</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantalla para Introducir el Código de Vinculación -->
+        <div id="join-session-screen" class="hidden w-full max-w-md mx-auto text-center z-10">
+            <div class="glass-panel p-8 rounded-2xl space-y-6 shadow-2xl">
+                <div>
+                    <h2 class="text-xl font-bold theme-text">Vincular Dispositivo</h2>
+                    <p class="text-xs text-slate-400 mt-1">Escribe el código de sala de 6 dígitos que se muestra en tu computadora.</p>
+                </div>
+
+                <div class="space-y-4">
+                    <input type="text" id="join-code-input" class="w-full bg-slate-950/80 border border-slate-850 hover:border-slate-700 focus:border-blue-500 rounded-xl py-3.5 px-4 text-center text-2xl font-black tracking-widest theme-input-text uppercase outline-none transition-all duration-200" placeholder="CÓDIGO" maxlength="6">
+                    
+                    <button onclick="submitJoinCode()" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold rounded-xl py-3.5 text-sm shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 transition-all duration-300">
+                        Sincronizar ahora
+                    </button>
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="showRoleSelection()" class="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+                        <i class="fa-solid fa-arrow-left mr-1"></i> Volver al inicio
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantalla de Espera/Emparejamiento (Código QR) -->
+        <div id="pairing-screen" class="hidden w-full max-w-sm mx-auto text-center z-10">
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden shadow-2xl">
+                <span class="bg-blue-500/10 text-blue-500 dark:text-blue-400 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-blue-500/15">Vincular mi dispositivo</span>
+                
+                <div class="my-5">
+                    <p class="text-[10px] text-slate-400 uppercase tracking-widest">Escribe este código en tu teléfono:</p>
+                    <h3 id="session-code-display" class="text-4xl font-black tracking-widest bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent py-2">------</h3>
+                </div>
+
+                <div class="flex items-center justify-center gap-2 mb-4">
+                    <div class="h-[1px] bg-slate-800 flex-grow"></div>
+                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">O escanea el código QR</span>
+                    <div class="h-[1px] bg-slate-800 flex-grow"></div>
+                </div>
+
+                <!-- Código QR de Conexión -->
+                <div class="gradient-border max-w-[200px] mx-auto mb-4 hover:scale-[1.02] transition-transform duration-300 shadow-2xl">
+                    <div class="gradient-border-inner p-3 bg-white flex items-center justify-center rounded-xl" id="qr-bg-box">
+                        <canvas id="qr-canvas" class="max-w-full rounded-md"></canvas>
+                    </div>
+                </div>
+
+                <div class="text-center mb-5">
+                    <button onclick="copySessionLink()" class="inline-flex items-center gap-1.5 text-[10px] text-slate-400 hover:text-blue-400 bg-slate-900/60 hover:bg-slate-900 border border-slate-850 px-3 py-2 rounded-lg transition-all duration-200 shadow-sm">
+                        <i class="fa-solid fa-copy"></i> Copiar enlace directo
+                    </button>
+                </div>
+
+                <!-- Mensaje de estado -->
+                <div class="pt-4 border-t border-slate-800/80 flex items-center justify-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-xs text-slate-500 border border-slate-850" id="pairing-indicator">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-xs font-bold theme-text-item" id="pairing-status-title">Esperando conexión...</p>
+                        <p class="text-[10px] text-slate-500 leading-tight">Introduce el código o escanea el QR desde tu móvil</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL DE CONTROL INTEGRADO Y BIDIRECCIONAL (SALA ACTIVA) -->
+        <div id="transfer-dashboard" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch max-w-5xl">
+            
+            <!-- PANEL IZQUIERDO: SECCIÓN DE ENVÍO -->
+            <div class="lg:col-span-5 flex flex-col p-6 glass-panel rounded-2xl relative overflow-hidden shadow-2xl">
+                <div class="absolute -top-24 -left-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl"></div>
+                
+                <div class="mb-5 z-10">
+                    <span class="bg-blue-500/10 text-blue-500 dark:text-blue-400 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-blue-500/15">
+                        <i class="fa-solid fa-paper-plane mr-1"></i> Transmisión
+                    </span>
+                    <h2 class="text-lg font-bold mt-4 theme-text">Enviar Archivos</h2>
+                    <p class="text-xs text-slate-400 mt-1">Sube cualquier archivo para mandarlo de inmediato al otro dispositivo.</p>
+                </div>
+
+                <!-- Dropzone de Archivo -->
+                <div id="dropzone" class="flex-grow border-2 border-dashed border-slate-800 dark:border-slate-800 hover:border-blue-500/80 rounded-xl p-8 text-center bg-slate-950/20 hover:bg-blue-500/5 transition-all duration-300 cursor-pointer mb-6 z-10 flex flex-col justify-center items-center">
+                    <input type="file" id="file-input" class="hidden">
+                    
+                    <div id="dropzone-idle" class="space-y-4">
+                        <div class="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto border border-blue-500/25 text-blue-400">
+                            <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="theme-text-item font-bold text-sm">Selecciona o arrastra un archivo</p>
+                            <p class="text-slate-500 text-[10px] mt-1">Soporta fotos, vídeos, PDFs, etc. de hasta 100MB</p>
+                        </div>
+                    </div>
+
+                    <!-- Progreso de Subida -->
+                    <div id="dropzone-loading" class="hidden w-full max-w-xs">
+                        <div class="relative w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                            <svg class="w-16 h-16 transform -rotate-90">
+                                <circle cx="32" cy="32" r="28" stroke="currentColor" class="text-slate-800" stroke-width="4" fill="transparent" />
+                                <circle cx="32" cy="32" r="28" stroke="currentColor" class="text-blue-500 transition-all duration-100" stroke-width="4" fill="transparent"
+                                    stroke-dasharray="175.9" stroke-dashoffset="175.9" id="progress-ring-circle" />
+                            </svg>
+                            <span class="absolute text-xs font-black text-blue-400" id="progress-percentage">0%</span>
+                        </div>
+                        <p class="theme-text-item text-xs font-bold" id="upload-status-title">Transmitiendo...</p>
+                        <p class="text-slate-500 text-[10px] mt-1" id="upload-status-details">Cargando datos en la nube temporal...</p>
+                    </div>
+                </div>
+
+                <!-- Alerta de Archivo Enviado con Éxito -->
+                <div id="upload-success-panel" class="hidden bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-center gap-3 mb-6 z-10">
+                    <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <div class="text-left flex-grow overflow-hidden">
+                        <p class="text-xs font-bold theme-text-item truncate" id="success-filename">archivo.jpg</p>
+                        <p class="text-[10px] text-emerald-500 font-semibold uppercase tracking-wider">¡Transmitido con éxito!</p>
+                    </div>
+                    <button onclick="resetDropzone()" class="text-[10px] font-bold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-850 px-3 py-1.5 rounded-lg border border-slate-800 transition-colors">
+                        Enviar otro
+                    </button>
+                </div>
+
+                <!-- Botón Desconectar -->
+                <div class="text-center z-10">
+                    <button onclick="disconnectSession()" class="text-[10px] text-slate-500 hover:text-red-400 inline-flex items-center gap-1.5 transition-colors font-medium">
+                        <i class="fa-solid fa-unlink"></i> Desconectar de la Sala
+                    </button>
+                </div>
+            </div>
+
+            <!-- PANEL DERECHO: BANDEJA DE ENTRADA -->
+            <div class="lg:col-span-7 flex flex-col p-6 glass-panel rounded-2xl relative overflow-hidden shadow-2xl">
+                <div class="absolute top-10 right-10 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
+                
+                <div class="flex justify-between items-center mb-6 z-10">
+                    <div>
+                        <span class="bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-indigo-500/15">Bandeja de Entrada</span>
+                        <h2 class="text-lg font-bold mt-4 theme-text">Archivos Recibidos</h2>
+                    </div>
+                    <button id="clear-list-btn" onclick="clearReceivedFiles()" class="hidden text-xs text-slate-500 hover:text-red-400 transition-colors font-medium">
+                        <i class="fa-solid fa-trash-can mr-1"></i> Limpiar
+                    </button>
+                </div>
+
+                <!-- Bandeja Vacía -->
+                <div id="receiver-empty-state" class="flex-grow flex flex-col items-center justify-center text-center py-12 z-10">
+                    <div class="w-16 h-16 rounded-2xl bg-slate-900/60 flex items-center justify-center border border-slate-850 mb-4 shadow-inner">
+                        <i class="fa-solid fa-file-circle-minus text-2xl text-slate-500"></i>
+                    </div>
+                    <p class="theme-text-item font-bold text-sm">Bandeja de entrada vacía</p>
+                    <p class="text-slate-500 text-xs max-w-xs mt-2 leading-relaxed">Los archivos que cargues en tu celular o computadora sincronizada se listarán aquí en tiempo real de forma bidireccional.</p>
+                </div>
+
+                <!-- Lista de Archivos Recibidos -->
+                <div id="receiver-files-list" class="hidden flex-grow space-y-3 overflow-y-auto max-h-[340px] pr-2 z-10">
+                    <!-- Tarjetas de archivo agregadas aquí -->
+                </div>
+                
+                <!-- Opciones de Configuración Rápida -->
+                <div class="mt-6 pt-4 border-t border-slate-800/80 dark:border-slate-850 flex items-center justify-between text-[11px] text-slate-400">
+                    <span class="flex items-center gap-1.5 font-medium">
+                        <i class="fa-solid fa-bell text-blue-500 animate-pulse"></i> Alertas de sonido activas
+                    </span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="auto-download-toggle" class="sr-only peer">
+                        <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                        <span class="ml-2 font-bold text-slate-300 uppercase tracking-wider text-[9px]">Autodescarga</span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- TOAST NOTIFICATION HUB -->
+    <div id="notification-toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="glass-panel border-l-4 border-blue-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm">
+            <div class="w-8 h-8 rounded-full bg-blue-500/15 flex items-center justify-center text-blue-400 shrink-0" id="notification-icon">
+                <i class="fa-solid fa-info"></i>
+            </div>
+            <div>
+                <p class="text-xs font-bold theme-text-item" id="notification-title">Alerta</p>
+                <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed" id="notification-message">Mensaje del sistema.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PIE DE PÁGINA -->
+    <footer class="w-full text-center py-6 text-[10px] text-slate-600 border-t border-slate-950/40 z-10 bg-slate-950/20">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-2">
+            <p>&copy; 2026 QR-Drop. Transferencia bidireccional instantánea y temporal.</p>
+            <div class="flex gap-4 font-semibold uppercase tracking-wider text-[9px]">
+                <span class="hover:text-slate-400 transition-colors"><i class="fa-solid fa-shield-halved mr-1 text-slate-500"></i> Archivos Temporales</span>
+                <span class="hover:text-slate-400 transition-colors"><i class="fa-solid fa-arrows-rotate mr-1 text-slate-500"></i> Bidireccional</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- LÓGICA DE CONTROL (JS) -->
+    <script>
+        // Variables principales de estado
+        let currentSessionId = "";
+        let isMobileSession = false;
+        let eventSource = null;
+        let activeReceivedFilesCount = 0;
+        const clientId = "client_" + Math.random().toString(36).substring(2, 15);
+
+        // Inicializar Aplicación al Cargar Ventana
+        window.onload = function() {
+            // Cargar Tema
+            initTheme();
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const sessionIdFromUrl = urlParams.get('session');
+
+            // Ocultar pantalla de carga inicial
+            document.getElementById('loading-screen').classList.add('hidden');
+
+            if (sessionIdFromUrl) {
+                isMobileSession = true;
+                currentSessionId = sessionIdFromUrl.toLowerCase();
+                setupTransferDashboard();
+            } else {
+                showRoleSelection();
+            }
+        };
+
+        // --- SISTEMA DE TEMA CLARO/OSCURO ---
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            applyTheme(savedTheme);
         }
 
-        // --- MANEJO DE ENVÍO DE ARCHIVOS ---
-        const fileInput = document.getElementById('file-input');
-        const CHUNK_SIZE = 16384; // 16KB por fragmento para máxima estabilidad WebRTC
+        function toggleTheme() {
+            const currentTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+            const targetTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme(targetTheme);
+        }
 
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file || !conn) return;
+        function applyTheme(theme) {
+            const body = document.body;
+            const themeIcon = document.getElementById('theme-icon');
+            const themeBtn = document.getElementById('theme-btn');
+            const appBrandTitle = document.getElementById('app-brand-title');
+            const statusBadge = document.getElementById('status-badge');
+            const qrBgBox = document.getElementById('qr-bg-box');
 
-            showProgress("Enviando: " + file.name);
-
-            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-            
-            // Enviar Metadatos primero
-            conn.send({
-                type: 'metadata',
-                name: file.name,
-                mime: file.type,
-                totalChunks: totalChunks
-            });
-
-            let currentChunk = 0;
-            const fileReader = new FileReader();
-
-            fileReader.onload = (event) => {
-                conn.send({
-                    type: 'chunk',
-                    chunk: event.target.result
+            if (theme === 'dark') {
+                body.classList.remove('light-mode');
+                body.classList.add('dark-mode');
+                document.documentElement.classList.add('dark');
+                
+                // Icono Sol para cambiar a claro
+                themeIcon.className = "fa-solid fa-sun text-sm text-amber-500";
+                
+                // Ajustes de clases específicos
+                appBrandTitle.className = "text-xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent";
+                statusBadge.className = "flex items-center gap-2 text-xs bg-slate-900/60 border border-slate-800 rounded-full px-3 py-1.5 shadow-md";
+                
+                // Actualizar textos globales
+                document.querySelectorAll('.theme-text').forEach(el => el.className = "text-2xl font-extrabold text-white theme-text");
+                document.querySelectorAll('.theme-text-item').forEach(el => el.className = "text-sm font-bold text-slate-100 theme-text-item");
+                document.querySelectorAll('.theme-input-text').forEach(el => {
+                    el.classList.add('bg-slate-950/80', 'border-slate-850', 'text-white');
+                    el.classList.remove('bg-white', 'border-slate-300', 'text-slate-900');
                 });
 
-                currentChunk++;
-                const percent = Math.round((currentChunk / totalChunks) * 100);
-                updateProgress(percent);
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.classList.remove('dark-mode');
+                body.classList.add('light-mode');
+                document.documentElement.classList.remove('dark');
+                
+                // Icono Luna para cambiar a oscuro
+                themeIcon.className = "fa-solid fa-moon text-sm text-indigo-500";
+                
+                // Ajustes de clases específicos
+                appBrandTitle.className = "text-xl font-black tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent";
+                statusBadge.className = "flex items-center gap-2 text-xs bg-white border border-slate-300/80 text-slate-800 rounded-full px-3 py-1.5 shadow-sm";
+                
+                // Actualizar textos globales
+                document.querySelectorAll('.theme-text').forEach(el => el.className = "text-2xl font-extrabold text-slate-900 theme-text");
+                document.querySelectorAll('.theme-text-item').forEach(el => el.className = "text-sm font-bold text-slate-900 theme-text-item");
+                document.querySelectorAll('.theme-input-text').forEach(el => {
+                    el.classList.remove('bg-slate-950/80', 'border-slate-850', 'text-white');
+                    el.classList.add('bg-white', 'border-slate-300', 'text-slate-900');
+                });
 
-                if (currentChunk < totalChunks) {
-                    loadNextChunk();
-                } else {
-                    hideProgress();
-                    fileInput.value = ""; // Reset del input
-                    alert("¡Archivo enviado de forma segura!");
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Navegación de Vistas
+        function showRoleSelection() {
+            document.getElementById('role-selection-screen').classList.remove('hidden');
+            document.getElementById('join-session-screen').classList.add('hidden');
+            document.getElementById('pairing-screen').classList.add('hidden');
+            document.getElementById('transfer-dashboard').classList.add('hidden');
+        }
+
+        function showJoinSessionScreen() {
+            document.getElementById('role-selection-screen').classList.add('hidden');
+            document.getElementById('join-session-screen').classList.remove('hidden');
+            document.getElementById('join-code-input').focus();
+        }
+
+        // Generar un ID de sala único y sencillo de escribir
+        function generateRoomCode() {
+            const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < 6; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        // --- SISTEMA DE MENSAJERÍA SSE EN TIEMPO REAL (NTFY) ---
+        function initSSERelay(sessionId) {
+            const topic = 'qrdrop_' + sessionId;
+            
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            // Suscribirse al canal público de mensajería libre
+            eventSource = new EventSource(`https://ntfy.sh/${topic}/sse`);
+            
+            eventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.message) {
+                        const payload = JSON.parse(data.message);
+                        
+                        // Ignorar eventos publicados por esta misma ventana
+                        if (payload.senderId === clientId) return;
+
+                        handleSignalMessage(payload);
+                    }
+                } catch (e) {
+                    console.error("SSE Parse Error:", e);
                 }
             };
 
-            function loadNextChunk() {
-                const start = currentChunk * CHUNK_SIZE;
-                const end = Math.min(start + CHUNK_SIZE, file.size);
-                const blobSlice = file.slice(start, end);
-                fileReader.readAsArrayBuffer(blobSlice);
+            eventSource.onerror = (err) => {
+                console.warn("Se interrumpió la conexión. Reestableciendo canal de red...", err);
+            };
+        }
+
+        // Publicar eventos o mensajes en el canal ntfy
+        async function publishSignal(payload) {
+            const topic = 'qrdrop_' + currentSessionId;
+            payload.senderId = clientId;
+
+            try {
+                await fetch(`https://ntfy.sh/${topic}`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+            } catch (err) {
+                console.error("No se pudo publicar señal en la red:", err);
+            }
+        }
+
+        // --- CONFIGURACIÓN DE DISPOSITIVOS ---
+
+        // Iniciar en modo Computadora (Muestra QR de emparejamiento)
+        function initAsPC() {
+            document.getElementById('role-selection-screen').classList.add('hidden');
+            document.getElementById('pairing-screen').classList.remove('hidden');
+
+            currentSessionId = generateRoomCode();
+            document.getElementById('session-code-display').textContent = currentSessionId.toUpperCase();
+
+            // Configurar URL para el código QR
+            const defaultUrl = window.location.origin + window.location.pathname + "?session=" + currentSessionId;
+            renderQR(defaultUrl);
+
+            // Escuchar el canal de mensajería de la sala
+            initSSERelay(currentSessionId);
+
+            window.copySessionLink = function() {
+                const tempInput = document.createElement('input');
+                tempInput.value = defaultUrl;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                try {
+                    document.execCommand('copy');
+                    showToast("Enlace Copiado", "El enlace se guardó en el portapapeles.", "blue");
+                } catch (e) {
+                    console.error(e);
+                }
+                document.body.removeChild(tempInput);
+            };
+        }
+
+        // Conectarse desde el teléfono móvil enviando el código manual
+        function submitJoinCode() {
+            const rawCode = document.getElementById('join-code-input').value.trim();
+            if (!rawCode) {
+                showToast("Ingresa un código", "Escribe el código de sala que ves en tu PC.", "red");
+                return;
             }
 
-            loadNextChunk();
-        });
+            currentSessionId = rawCode.toLowerCase();
+            isMobileSession = true;
 
-        // --- FUNCIONES AUXILIARES DE INTERFAZ ---
-        const progressContainer = document.getElementById('progress-container');
-        const progressStatus = document.getElementById('progress-status');
-        const progressPercent = document.getElementById('progress-percent');
-        const progressBar = document.getElementById('progress-bar');
-
-        function showProgress(statusText) {
-            progressContainer.classList.remove('hidden');
-            progressStatus.textContent = statusText;
-            updateProgress(0);
+            document.getElementById('join-session-screen').classList.add('hidden');
+            setupTransferDashboard();
         }
 
-        function updateProgress(percent) {
-            progressPercent.textContent = percent + "%";
-            progressBar.style.width = percent + "%";
+        // Transición e inicialización del Panel de Control Bidireccional
+        function setupTransferDashboard() {
+            document.getElementById('pairing-screen').classList.add('hidden');
+            document.getElementById('transfer-dashboard').classList.remove('hidden');
+            
+            // Unir a la sala de mensajería
+            initSSERelay(currentSessionId);
+
+            // Emitir un saludo de enlace para la computadora
+            setTimeout(() => {
+                publishSignal({ type: 'handshake', device: isMobileSession ? 'mobile' : 'pc' });
+            }, 800);
+
+            // Configurar los manejadores para enviar archivos desde este dispositivo
+            const dropzone = document.getElementById('dropzone');
+            const fileInput = document.getElementById('file-input');
+
+            dropzone.onclick = () => fileInput.click();
+            fileInput.onchange = (e) => handleFileSelection(e.target.files[0]);
+
+            // Drag & Drop
+            dropzone.ondragover = (e) => {
+                e.preventDefault();
+                dropzone.classList.add('border-blue-500', 'bg-blue-500/5');
+            };
+            dropzone.ondragleave = () => {
+                dropzone.classList.remove('border-blue-500', 'bg-blue-500/5');
+            };
+            dropzone.ondrop = (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('border-blue-500', 'bg-blue-500/5');
+                if (e.dataTransfer.files.length > 0) {
+                    handleFileSelection(e.dataTransfer.files[0]);
+                }
+            };
         }
 
-        function hideProgress() {
-            progressContainer.classList.add('hidden');
+        // Administrador de señales recibidas por el canal de mensajería
+        function handleSignalMessage(payload) {
+            if (payload.type === 'handshake') {
+                // Notificar vinculación en pantalla
+                showToast("¡Dispositivo Conectado!", "Sincronización bidireccional lista en la nube.", "emerald");
+                playChimeSound();
+                
+                // Si estaba en la pantalla de emparejamiento, pasar al panel de control
+                if (!document.getElementById('pairing-screen').classList.contains('hidden')) {
+                    setupTransferDashboard();
+                }
+
+                // Devolver saludo de confirmación
+                publishSignal({ type: 'handshake_ack' });
+            } 
+            else if (payload.type === 'handshake_ack') {
+                showToast("¡Enlazados con éxito!", "Transferencia en tiempo real activada.", "emerald");
+            }
+            else if (payload.type === 'file_transmitted') {
+                handleIncomingFile(payload.file);
+            }
+        }
+
+        // --- MANEJO DE SUBIDA DE ARCHIVOS (HACIA TMPFILES) ---
+        function handleFileSelection(file) {
+            if (!file) return;
+
+            const maxLimit = 100 * 1024 * 1024; // Límite de 100MB
+            if (file.size > maxLimit) {
+                showToast("Archivo muy pesado", "El límite de tamaño es de 100MB por archivo.", "red");
+                return;
+            }
+
+            document.getElementById('dropzone-idle').classList.add('hidden');
+            document.getElementById('dropzone-loading').classList.remove('hidden');
+
+            const xhr = new XMLHttpRequest();
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Actualización de barra de progreso asíncrona de red
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const pct = Math.round((e.loaded / e.total) * 100);
+                    updateUploadProgress(pct);
+                }
+            };
+
+            xhr.onload = async () => {
+                if (xhr.status === 200) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.status === 'success' && response.data && response.data.url) {
+                            // Convertir enlace normal a enlace directo de descarga en tmpfiles
+                            const directDownloadUrl = response.data.url.replace("tmpfiles.org/", "tmpfiles.org/dl/");
+                            
+                            const filePayload = {
+                                id: 'f_' + Math.random().toString(36).substring(2, 11),
+                                name: file.name,
+                                size: file.size,
+                                url: directDownloadUrl,
+                                timestamp: Date.now()
+                            };
+
+                            // Compartir la payload del archivo en toda la sala
+                            await publishSignal({
+                                type: 'file_transmitted',
+                                file: filePayload
+                            });
+
+                            showUploadSuccess(file.name);
+                        } else {
+                            throw new Error("Respuesta no soportada del servidor.");
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        showUploadError("Error en el formato de respuesta del servidor.");
+                    }
+                } else {
+                    showUploadError(`No se pudo cargar el archivo (${xhr.status}).`);
+                }
+            };
+
+            xhr.onerror = () => {
+                showUploadError("Error de conexión. Revisa tu señal de internet.");
+            };
+
+            xhr.open('POST', 'https://tmpfiles.org/api/v1/upload', true);
+            xhr.send(formData);
+        }
+
+        function updateUploadProgress(percent) {
+            document.getElementById('progress-percentage').textContent = percent + "%";
+            const circle = document.getElementById('progress-ring-circle');
+            const radius = circle.r.baseVal.value;
+            const circumference = radius * 2 * Math.PI;
+            
+            const offset = circumference - (percent / 100) * circumference;
+            circle.style.strokeDasharray = `${circumference} ${circumference}`;
+            circle.style.strokeDashoffset = offset;
+
+            if (percent === 100) {
+                document.getElementById('upload-status-title').textContent = "Sincronizando archivo...";
+                document.getElementById('upload-status-details').textContent = "Ubicando en la sala...";
+            } else {
+                document.getElementById('upload-status-title').textContent = "Cargando archivo...";
+                document.getElementById('upload-status-details').textContent = "Por favor, mantén esta pestaña abierta.";
+            }
+        }
+
+        function showUploadSuccess(filename) {
+            document.getElementById('dropzone').classList.add('hidden');
+            document.getElementById('upload-success-panel').classList.remove('hidden');
+            document.getElementById('success-filename').textContent = filename;
+            showToast("Transmitido", `"${filename}" compartido en la sala.`, "emerald");
+            playChimeSound();
+        }
+
+        function showUploadError(msg) {
+            showToast("Error de envío", msg, "red");
+            resetDropzone();
+        }
+
+        window.resetDropzone = function() {
+            document.getElementById('upload-success-panel').classList.add('hidden');
+            document.getElementById('dropzone').classList.remove('hidden');
+            document.getElementById('dropzone-idle').classList.remove('hidden');
+            document.getElementById('dropzone-loading').classList.add('hidden');
+            document.getElementById('file-input').value = "";
+        };
+
+        // --- BANDEJA DE RECEPCIÓN Y ACCIÓN DE DESCARGA DIRECTA ASÍNCRONA (FORZADA) ---
+
+        function handleIncomingFile(file) {
+            const emptyState = document.getElementById('receiver-empty-state');
+            const filesList = document.getElementById('receiver-files-list');
+            const clearBtn = document.getElementById('clear-list-btn');
+
+            emptyState.classList.add('hidden');
+            filesList.classList.remove('hidden');
+            clearBtn.classList.remove('hidden');
+
+            activeReceivedFilesCount++;
+            playChimeSound();
+            showToast("¡Archivo Recibido!", `"${file.name}" listo para descargar.`, "indigo");
+
+            // Comportamiento de Auto-descarga
+            if (document.getElementById('auto-download-toggle').checked) {
+                triggerDownload(file.url, file.name);
+            }
+
+            const card = document.createElement('div');
+            card.className = "flex items-center justify-between p-3.5 bg-slate-900/90 border border-slate-800/85 rounded-xl hover:border-slate-700/80 transition-all duration-300";
+            
+            const fileIconClass = getFileIcon(file.name);
+            const sizeStr = formatBytes(file.size);
+
+            card.innerHTML = `
+                <div class="flex items-center gap-3 overflow-hidden">
+                    <div class="w-10 h-10 rounded-lg bg-slate-850 flex items-center justify-center text-blue-400 shrink-0 border border-slate-800">
+                        <i class="${fileIconClass} text-lg"></i>
+                    </div>
+                    <div class="text-left overflow-hidden font-medium">
+                        <p class="text-xs font-bold text-slate-100 truncate pr-4">${escapeHtml(file.name)}</p>
+                        <p class="text-[10px] text-slate-500 mt-0.5">${sizeStr} &bull; ${new Date(file.timestamp).toLocaleTimeString()}</p>
+                    </div>
+                </div>
+                <div>
+                    <button onclick="triggerDownload('${file.url}', '${file.name}', this)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3.5 py-2 rounded-lg font-bold transition-all duration-200 flex items-center gap-1.5 shadow-lg shadow-blue-600/10 hover:shadow-blue-500/20">
+                        <i class="fa-solid fa-circle-down"></i> Descargar
+                    </button>
+                </div>
+            `;
+            filesList.insertBefore(card, filesList.firstChild);
+        }
+
+        // DESCARGA ASÍNCRONA POR BLOBS PARA DETENER LA APERTURA DE NUEVAS PESTAÑAS
+        async function triggerDownload(url, filename, buttonElement) {
+            let originalHTML = "";
+            if (buttonElement) {
+                originalHTML = buttonElement.innerHTML;
+                buttonElement.disabled = true;
+                buttonElement.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Guardando...';
+            }
+
+            try {
+                // Intentar descargar de forma asíncrona para convertirlo a objeto Blob binario local
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("Fallo de red al descargar");
+
+                const blob = await response.blob();
+                const blobUrl = URL.createObjectURL(blob);
+
+                // Forzar el guardado de archivo en el cliente
+                const anchor = document.createElement('a');
+                anchor.href = blobUrl;
+                anchor.download = filename;
+                document.body.appendChild(anchor);
+                anchor.click();
+                document.body.removeChild(anchor);
+
+                // Liberar memoria
+                URL.revokeObjectURL(blobUrl);
+                showToast("Guardado", `"${filename}" descargado con éxito.`, "emerald");
+            } catch (error) {
+                console.warn("Fallo en descarga asíncrona directa (posible CORS). Respaldando con apertura normal...", error);
+                
+                // Sistema de respaldo (Apertura normal)
+                const anchor = document.createElement('a');
+                anchor.href = url;
+                anchor.target = "_blank";
+                anchor.download = filename;
+                document.body.appendChild(anchor);
+                anchor.click();
+                document.body.removeChild(anchor);
+            } finally {
+                if (buttonElement) {
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = originalHTML;
+                }
+            }
+        }
+
+        window.clearReceivedFiles = function() {
+            if (confirm("¿Estás seguro de que deseas limpiar la lista de archivos?")) {
+                const filesList = document.getElementById('receiver-files-list');
+                filesList.innerHTML = "";
+                activeReceivedFilesCount = 0;
+                document.getElementById('receiver-empty-state').classList.remove('hidden');
+                document.getElementById('receiver-files-list').classList.add('hidden');
+                document.getElementById('clear-list-btn').classList.add('hidden');
+                showToast("Bandeja Vacía", "Se borró el registro local de archivos.", "blue");
+            }
+        };
+
+        // --- SISTEMA DE AUDIO SINTETIZADO ---
+        function playChimeSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'sine';
+                // Melodía futurista arpegiada (C5 -> E5 -> G5 -> C6)
+                osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+                osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2);
+                osc.frequency.setValueAtTime(1046.50, ctx.currentTime + 0.3);
+                
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start();
+                osc.stop(ctx.currentTime + 0.6);
+            } catch (err) {
+                console.debug("Audio silenciado por políticas de interacción del navegador.");
+            }
+        }
+
+        // --- UTILERÍAS ---
+
+        function renderQR(urlText) {
+            try {
+                new QRious({
+                    element: document.getElementById('qr-canvas'),
+                    value: urlText,
+                    size: 200,
+                    background: '#ffffff',
+                    foreground: '#0b0f19'
+                });
+            } catch (err) {
+                console.error("Fallo al construir Canvas del QR:", err);
+            }
+        }
+
+        function disconnectSession() {
+            if (confirm("¿Estás seguro de que deseas desconectar y cerrar esta sesión?")) {
+                if (eventSource) eventSource.close();
+                window.location.href = window.location.origin + window.location.pathname;
+            }
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            switch(ext) {
+                case 'pdf': return 'fa-solid fa-file-pdf';
+                case 'jpg': case 'jpeg': case 'png': case 'gif': case 'webp': case 'svg': return 'fa-solid fa-file-image';
+                case 'mp4': case 'mkv': case 'avi': case 'mov': return 'fa-solid fa-file-video';
+                case 'mp3': case 'wav': case 'ogg': case 'flac': return 'fa-solid fa-file-audio';
+                case 'zip': case 'rar': case 'tar': case 'gz': return 'fa-solid fa-file-zipper';
+                case 'doc': case 'docx': return 'fa-solid fa-file-word';
+                case 'xls': case 'xlsx': return 'fa-solid fa-file-excel';
+                case 'txt': case 'md': return 'fa-solid fa-file-lines';
+                default: return 'fa-solid fa-file';
+            }
+        }
+
+        function showToast(title, message, themeColor = "blue") {
+            const toast = document.getElementById('notification-toast');
+            const tTitle = document.getElementById('notification-title');
+            const tMsg = document.getElementById('notification-message');
+            const tIcon = document.getElementById('notification-icon');
+
+            tTitle.textContent = title;
+            tMsg.textContent = message;
+
+            toast.className = "fixed bottom-6 right-6 z-50 transform transition-all duration-300 pointer-events-none";
+            tIcon.className = "w-8 h-8 rounded-full flex items-center justify-center shrink-0";
+
+            if (themeColor === "red") {
+                toast.classList.add('translate-y-0', 'opacity-100');
+                toast.firstChild.className = "glass-panel border-l-4 border-red-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
+                tIcon.classList.add('bg-red-500/15', 'text-red-400');
+                tIcon.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+            } else if (themeColor === "emerald") {
+                toast.classList.add('translate-y-0', 'opacity-100');
+                toast.firstChild.className = "glass-panel border-l-4 border-emerald-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
+                tIcon.classList.add('bg-emerald-500/15', 'text-emerald-400');
+                tIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            } else if (themeColor === "indigo") {
+                toast.classList.add('translate-y-0', 'opacity-100');
+                toast.firstChild.className = "glass-panel border-l-4 border-indigo-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
+                tIcon.classList.add('bg-indigo-500/15', 'text-indigo-400');
+                tIcon.innerHTML = '<i class="fa-solid fa-satellite-dish"></i>';
+            } else {
+                toast.classList.add('translate-y-0', 'opacity-100');
+                toast.firstChild.className = "glass-panel border-l-4 border-blue-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
+                tIcon.classList.add('bg-blue-500/15', 'text-blue-400');
+                tIcon.innerHTML = '<i class="fa-solid fa-info"></i>';
+            }
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 4000);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
     </script>
 </body>
