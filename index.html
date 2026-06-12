@@ -35,76 +35,21 @@
             font-family: 'Inter', sans-serif;
             transition: background-color 0.5s ease, color 0.5s ease;
         }
-
-        @keyframes float-orb {
-            0% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(30px, -50px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.95); }
-            100% { transform: translate(0, 0) scale(1); }
-        }
-
+        
+        /* Réplica de fondo estática de alta fidelidad basada en image_78f7b6.png */
         body.dark-mode {
             background-color: #06020f;
-            overflow: hidden; /* Evita scrolls innecesarios por la animación */
+            background-image: 
+                radial-gradient(circle at 80% 40%, #4c1d95 0%, transparent 45%),
+                radial-gradient(circle at 20% 80%, #1e1b4b 0%, transparent 50%);
+            background-attachment: fixed;
         }
-        
-        body.dark-mode::before, body.dark-mode::after {
-            content: '';
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(100px);
-            z-index: -1;
-            opacity: 0.6;
-            animation: float-orb 15s infinite ease-in-out;
-        }
-        
-        body.dark-mode::before {
-            width: 600px;
-            height: 600px;
-            background: #4c1d95;
-            top: -100px;
-            left: -100px;
-            animation-delay: 0s;
-        }
-        
-        body.dark-mode::after {
-            width: 450px;
-            height: 450px;
-            background: #1e1b4b;
-            bottom: -50px;
-            right: -50px;
-            animation-delay: -5s; /* Desfase para que no se muevan igual */
-        }
-
         body.light-mode {
             background-color: #f5f3ff;
-        }
-
-        body.light-mode::before, body.light-mode::after {
-            content: '';
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(120px);
-            z-index: -1;
-            opacity: 0.15;
-            animation: float-orb 20s infinite ease-in-out;
-        }
-        
-        body.light-mode::before {
-            width: 500px;
-            height: 500px;
-            background: #8b5cf6;
-            top: 10%;
-            right: 10%;
-        }
-
-        body.light-mode::after {
-            width: 400px;
-            height: 400px;
-            background: #ec4899;
-            bottom: 10%;
-            left: 10%;
-            animation-delay: -7s;
+            background-image: 
+                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
+            background-attachment: fixed;
         }
         
         /* Efecto de Vidrio Esmerilado Premium con Textura Micro-Grain (image_78f7b6.png) */
@@ -498,6 +443,8 @@
         let eventSource = null;
         let activeReceivedFilesCount = 0;
         let currentPreviewBlobUrl = null;
+        // Nueva variable para gestionar cancelaciones de carga
+        let currentAbortController = null; 
         const clientId = "client_" + Math.random().toString(36).substring(2, 15);
 
         // INICIALIZADOR SEGURO QUE PREVIENE PANTALLAS ATASCADAS (READYSTATE CHECK)
@@ -921,61 +868,87 @@
             mAudio.classList.add('hidden');
             mFallback.classList.add('hidden');
 
+        // --- SISTEMA DE VISTA PREVIA ULTRA-COMPATIBLE (OPTIMIZADO) ---
+        window.openPreviewModal = async function(url, filename) {
+            const modal = document.getElementById('preview-modal');
+            const mTitle = document.getElementById('modal-title');
+            const mIcon = document.getElementById('modal-icon');
+            const mLoader = document.getElementById('modal-loader');
+            const mDownloadBtn = document.getElementById('modal-download-btn');
+
+            const mImage = document.getElementById('modal-image-preview');
+            const mVideo = document.getElementById('modal-video-preview');
+            const mAudio = document.getElementById('modal-audio-preview');
+            const mFallback = document.getElementById('modal-fallback');
+
+            // Resetear estado
+            mImage.classList.add('hidden');
+            mVideo.classList.add('hidden');
+            mAudio.classList.add('hidden');
+            mFallback.classList.add('hidden');
+            mLoader.classList.remove('hidden');
+
+            // Cancelar cualquier descarga previa en curso antes de empezar una nueva
+            if (currentAbortController) currentAbortController.abort();
+            currentAbortController = new AbortController();
+
             mTitle.textContent = filename;
             mIcon.className = getFileIcon(filename) + " text-violet-500 text-sm";
-            mLoader.classList.remove('hidden');
             modal.classList.remove('hidden');
 
-            // Liberar memoria de la previsualización anterior si existe
-            if (currentPreviewBlobUrl) {
-                URL.revokeObjectURL(currentPreviewBlobUrl);
-                currentPreviewBlobUrl = null;
-            }
-
-            // Configurar botón de descarga de la modal
-            mDownloadBtn.onclick = function(e) {
+            mDownloadBtn.onclick = function() {
                 triggerDownload(url, filename, mDownloadBtn);
             };
 
             const ext = filename.split('.').pop().toLowerCase();
 
             try {
-                // Si el formato es multimedia, descargamos el archivo a RAM como Blob y creamos un Local URL
-                if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'mp4', 'webm', 'ogg', 'mov', 'mp3', 'wav', 'flac'].includes(ext)) {
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error("Error en red al descargar para vista previa");
-                    
+                // Si es imagen, usamos el fetch para tener control sobre la carga (y poder abortarla)
+                if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+                    const response = await fetch(url, { signal: currentAbortController.signal });
                     const blob = await response.blob();
+                    
+                    if (currentPreviewBlobUrl) URL.revokeObjectURL(currentPreviewBlobUrl);
                     currentPreviewBlobUrl = URL.createObjectURL(blob);
-
-                    mLoader.classList.add('hidden');
-
-                    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
-                        mImage.src = currentPreviewBlobUrl;
-                        mImage.classList.remove('hidden');
-                    } else if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
-                        mVideo.src = currentPreviewBlobUrl;
-                        mVideo.classList.remove('hidden');
-                    } else if (['mp3', 'wav', 'flac'].includes(ext)) {
-                        mAudio.src = currentPreviewBlobUrl;
-                        mAudio.classList.remove('hidden');
-                    }
+                    
+                    mImage.src = currentPreviewBlobUrl;
+                    mImage.onload = () => mLoader.classList.add('hidden');
+                    mImage.classList.remove('hidden');
+                } 
+                // Para video/audio, mantenemos carga nativa porque los navegadores lo optimizan mejor (streaming)
+                else if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
+                    mVideo.src = url;
+                    mVideo.onloadeddata = () => mLoader.classList.add('hidden');
+                    mVideo.classList.remove('hidden');
+                } else if (['mp3', 'wav', 'flac'].includes(ext)) {
+                    mAudio.src = url;
+                    mAudio.onloadeddata = () => mLoader.classList.add('hidden');
+                    mAudio.classList.remove('hidden');
                 } else {
                     mLoader.classList.add('hidden');
                     mFallback.classList.remove('hidden');
                 }
             } catch (err) {
-                console.error("No se pudo cargar la previsualización por Blob, utilizando canal alterno:", err);
-                mLoader.classList.add('hidden');
-                mFallback.classList.remove('hidden');
+                if (err.name === 'AbortError') {
+                    console.log("Carga cancelada por el usuario.");
+                } else {
+                    mLoader.classList.add('hidden');
+                    mFallback.classList.remove('hidden');
+                }
             }
         };
 
         window.closePreviewModal = function() {
+            // Abortar carga si se cierra el modal
+            if (currentAbortController) {
+                currentAbortController.abort();
+                currentAbortController = null;
+            }
+            
             const modal = document.getElementById('preview-modal');
             modal.classList.add('hidden');
 
-            // Detener y vaciar fuentes para liberar RAM
+            // Limpiar fuentes
             document.getElementById('modal-image-preview').src = "";
             const video = document.getElementById('modal-video-preview');
             video.pause();
@@ -986,7 +959,6 @@
             audio.removeAttribute('src');
             audio.load();
 
-            // Limpiar el ObjectURL creado para no causar fugas de memoria
             if (currentPreviewBlobUrl) {
                 URL.revokeObjectURL(currentPreviewBlobUrl);
                 currentPreviewBlobUrl = null;
