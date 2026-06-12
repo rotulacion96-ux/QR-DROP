@@ -14,7 +14,7 @@
                 extend: {
                     colors: {
                         brand: {
-                            500: '#8b5cf6', // Púrpura brillante de image_78f7b6.png
+                            500: '#8b5cf6', // Violeta intenso vibrante de la imagen
                             600: '#7c3aed',
                             700: '#6d28d9'
                         }
@@ -35,31 +35,22 @@
             font-family: 'Inter', sans-serif;
             transition: background-color 0.5s ease, color 0.5s ease;
         }
-        
-        /* Réplica de fondo estática de alta fidelidad basada en image_78f7b6.png */
+        /* Fondos responsivos según el modo actual - Ajustado a la paleta ultra-oscura de image_78f7b6.png */
         body.dark-mode {
             background-color: #06020f;
-            background-image: 
-                radial-gradient(circle at 80% 40%, #4c1d95 0%, transparent 45%),
-                radial-gradient(circle at 20% 80%, #1e1b4b 0%, transparent 50%);
-            background-attachment: fixed;
         }
         body.light-mode {
             background-color: #f5f3ff;
-            background-image: 
-                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.12) 0%, transparent 40%),
-                radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.05) 0%, transparent 50%);
-            background-attachment: fixed;
         }
         
-        /* Efecto de Vidrio Esmerilado Premium con Textura Micro-Grain (image_78f7b6.png) */
+        /* Efecto de Vidrio Esmerilado Premium con Textura Micro-Grain de image_78f7b6.png */
         .glass-panel {
             backdrop-filter: blur(35px) saturate(210%);
             -webkit-backdrop-filter: blur(35px) saturate(210%);
             transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s ease, box-shadow 0.4s ease;
         }
         
-        /* Modo Oscuro con grano sutil SVG */
+        /* Modo Oscuro: Réplica exacta del efecto Frosted Glass de la tarjeta de referencia */
         .dark-mode .glass-panel {
             background: rgba(18, 9, 36, 0.45);
             background-image: 
@@ -71,7 +62,6 @@
                 inset 0 1px 0 rgba(255, 255, 255, 0.15);
         }
         
-        /* Modo Claro */
         .light-mode .glass-panel {
             background: rgba(255, 255, 255, 0.65);
             background-image: radial-gradient(at 0% 0%, rgba(255, 255, 255, 0.4) 0, transparent 50%);
@@ -96,6 +86,45 @@
         .light-mode .gradient-border-inner {
             background: #ffffff;
         }
+        
+        /* ANIMACIONES DE ESFERAS DE LUZ INTENSAS Y SUAVES */
+        @keyframes float-orb-violet {
+            0%, 100% {
+                transform: translate(0px, 0px) scale(1);
+            }
+            33% {
+                transform: translate(60px, -40px) scale(1.15);
+            }
+            66% {
+                transform: translate(-30px, 50px) scale(0.9);
+            }
+        }
+        @keyframes float-orb-magenta {
+            0%, 100% {
+                transform: translate(0px, 0px) scale(1.1);
+            }
+            50% {
+                transform: translate(-50px, 60px) scale(0.85);
+            }
+        }
+        @keyframes float-orb-cyan {
+            0%, 100% {
+                transform: translate(0px, 0px) scale(0.9);
+            }
+            50% {
+                transform: translate(40px, -30px) scale(1.1);
+            }
+        }
+        
+        .animate-orb-1 {
+            animation: float-orb-violet 14s ease-in-out infinite;
+        }
+        .animate-orb-2 {
+            animation: float-orb-magenta 16s ease-in-out infinite;
+        }
+        .animate-orb-3 {
+            animation: float-orb-cyan 18s ease-in-out infinite;
+        }
 
         /* Personalización de scrollbar */
         ::-webkit-scrollbar {
@@ -115,11 +144,16 @@
 </head>
 <body class="min-h-screen text-slate-800 dark:text-slate-100 dark-mode flex flex-col justify-between overflow-x-hidden antialiased relative">
 
+    <!-- ESFERAS DE LUZ DE ALTA INTENSIDAD (RÉPLICA VIOLETA DE LA IMAGEN) -->
+    <div class="fixed top-[-10%] left-[-10%] w-[65vw] h-[65vw] rounded-full bg-violet-600/30 dark:bg-violet-600/35 blur-[130px] pointer-events-none z-0 transition-opacity duration-500 animate-orb-1"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[55vw] h-[55vw] rounded-full bg-fuchsia-600/25 dark:bg-fuchsia-600/25 blur-[150px] pointer-events-none z-0 transition-opacity duration-500 animate-orb-2"></div>
+    <div class="fixed top-[35%] left-[25%] w-[45vw] h-[45vw] rounded-full bg-indigo-500/15 dark:bg-indigo-500/20 blur-[120px] pointer-events-none z-0 transition-opacity duration-500 animate-orb-3"></div>
+
     <!-- CABECERA -->
     <header class="w-full max-w-7xl mx-auto px-6 py-5 flex justify-between items-center z-10 relative">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-                <i class="fa-solid fa-arrows-rotate text-white text-lg"></i>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 via-fuchsia-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30 animate-pulse">
+                <i class="fa-solid fa-arrows-rotate text-white text-lg animate-spin" style="animation-duration: 6s;"></i>
             </div>
             <div>
                 <h1 class="text-xl font-black tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:via-slate-100 dark:to-violet-300 bg-clip-text text-transparent" id="app-brand-title">QR-Drop</h1>
@@ -135,7 +169,7 @@
 
             <!-- Estado de Red -->
             <div class="flex items-center gap-2 text-xs bg-white/40 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800 rounded-full px-3 py-1.5 shadow-md" id="status-badge">
-                <span class="w-2 h-2 rounded-full bg-emerald-500" id="status-pulse"></span>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="status-pulse"></span>
                 <span class="text-slate-600 dark:text-slate-300 font-semibold" id="connection-status">Red Lista</span>
             </div>
         </div>
@@ -150,10 +184,10 @@
                 <div class="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-800"></div>
                 <div class="absolute inset-0 rounded-full border-4 border-t-violet-500 animate-spin"></div>
             </div>
-            <p class="text-slate-550 dark:text-slate-400 text-sm" id="loading-text">Cargando módulos de transmisión...</p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm" id="loading-text">Cargando módulos de transmisión bidireccional...</p>
         </div>
 
-        <!-- Pantalla de Selección de Rol -->
+        <!-- Pantalla de Selección de Rol (Estética de Vidrio Reforzada) -->
         <div id="role-selection-screen" class="hidden w-full max-w-md mx-auto text-center z-10">
             <div class="glass-panel p-8 rounded-[2rem] space-y-6 relative overflow-hidden">
                 <div>
@@ -162,14 +196,14 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 pt-2">
-                    <!-- Botón "Iniciar Conexión" -->
+                    <!-- Botón "Iniciar Conexión" (Recepción) -->
                     <button onclick="initAsPC()" class="flex items-center gap-4 p-5 rounded-2xl bg-white/10 dark:bg-slate-950/20 border border-slate-200/50 dark:border-slate-800/60 hover:border-violet-500/50 hover:bg-white/45 dark:hover:bg-slate-900/35 transition-all duration-300 text-left group">
                         <div class="w-12 h-12 rounded-xl bg-violet-500/10 group-hover:bg-violet-500/20 text-violet-500 dark:text-violet-400 flex items-center justify-center text-2xl shrink-0 transition-colors">
                             <i class="fa-solid fa-circle-arrow-down"></i>
                         </div>
                         <div>
                             <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Iniciar Conexión</p>
-                            <p class="text-[11px] text-slate-550 dark:text-slate-400 mt-0.5 font-medium leading-normal">Genera un código QR interactivo y espera a que otro dispositivo se vincule remotamente.</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium leading-normal">Genera un código QR interactivo y espera a que otro dispositivo se vincule remotamente.</p>
                         </div>
                     </button>
 
@@ -180,7 +214,7 @@
                         </div>
                         <div>
                             <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Unirme a una Sala</p>
-                            <p class="text-[11px] text-slate-550 dark:text-slate-400 mt-0.5 font-medium leading-normal">Ingresa el código manual de 6 caracteres para enlazarte y transferir datos al instante.</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium leading-normal">Ingresa el código manual de 6 caracteres para enlazarte y transferir datos al instante.</p>
                         </div>
                     </button>
                 </div>
@@ -198,13 +232,13 @@
                 <div class="space-y-4">
                     <input type="text" id="join-code-input" class="w-full bg-white/40 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-850 hover:border-slate-400 dark:hover:border-slate-700 focus:border-violet-500 dark:focus:border-violet-500 rounded-xl py-3.5 px-4 text-center text-2xl font-black tracking-widest text-slate-900 dark:text-white uppercase outline-none transition-all duration-200" placeholder="CÓDIGO" maxlength="6">
                     
-                    <button onclick="submitJoinCode()" class="w-full bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold rounded-xl py-3.5 text-sm shadow-lg shadow-violet-500/10 hover:shadow-violet-500/20 transition-all duration-300">
+                    <button onclick="submitJoinCode()" class="w-full bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold rounded-xl py-3.5 text-sm shadow-lg shadow-violet-500/20 transition-all duration-300">
                         Sincronizar ahora
                     </button>
                 </div>
 
                 <div class="pt-2">
-                    <button onclick="showRoleSelection()" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors font-semibold">
+                    <button onclick="showRoleSelection()" class="text-xs text-slate-550 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-300 transition-colors font-semibold">
                         <i class="fa-solid fa-arrow-left mr-1"></i> Volver al inicio
                     </button>
                 </div>
@@ -213,22 +247,22 @@
 
         <!-- Pantalla de Espera/Emparejamiento (Código QR) -->
         <div id="pairing-screen" class="hidden w-full max-w-sm mx-auto text-center z-10">
-            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden shadow-2xl">
+            <div class="glass-panel p-6 rounded-[2rem] relative overflow-hidden">
                 <span class="bg-violet-500/10 text-violet-600 dark:text-violet-400 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-violet-500/15">Vincular mi dispositivo</span>
                 
                 <div class="my-5">
-                    <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold">Escribe este código en tu teléfono:</p>
-                    <h3 id="session-code-display" class="text-4xl font-black tracking-widest bg-gradient-to-r from-violet-600 via-fuchsia-600 to-indigo-600 dark:from-violet-450 dark:via-fuchsia-400 dark:to-indigo-400 bg-clip-text text-transparent py-2">------</h3>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold">Escribe este código en tu teléfono:</p>
+                    <h3 id="session-code-display" class="text-4xl font-black tracking-widest bg-gradient-to-r from-violet-600 via-fuchsia-500 to-indigo-500 dark:from-violet-400 dark:via-fuchsia-400 dark:to-indigo-300 bg-clip-text text-transparent py-2">------</h3>
                 </div>
 
                 <div class="flex items-center justify-center gap-2 mb-4">
                     <div class="h-[1px] bg-slate-200 dark:bg-slate-800 flex-grow"></div>
-                    <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">O escanea el código QR</span>
+                    <span class="text-[9px] text-slate-550 dark:text-slate-400 font-bold uppercase tracking-widest">O escanea el código QR</span>
                     <div class="h-[1px] bg-slate-200 dark:bg-slate-800 flex-grow"></div>
                 </div>
 
                 <!-- Código QR de Conexión -->
-                <div class="gradient-border max-w-[200px] mx-auto mb-4 hover:scale-[1.02] transition-transform duration-300 shadow-2xl">
+                <div class="gradient-border max-w-[200px] mx-auto mb-4 hover:scale-[1.02] transition-transform duration-300 shadow-xl">
                     <div class="gradient-border-inner p-3 bg-white flex items-center justify-center rounded-xl" id="qr-bg-box">
                         <canvas id="qr-canvas" class="max-w-full rounded-md"></canvas>
                     </div>
@@ -242,8 +276,8 @@
 
                 <!-- Mensaje de estado -->
                 <div class="pt-4 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-white/40 dark:bg-slate-900 flex items-center justify-center text-xs text-slate-500 border border-slate-200 dark:border-slate-850" id="pairing-indicator">
-                        <i class="fa-solid fa-mobile-screen-button"></i>
+                    <div class="w-8 h-8 rounded-full bg-white/40 dark:bg-slate-900 flex items-center justify-center text-xs text-slate-500 border border-slate-200 dark:border-slate-850 animate-pulse" id="pairing-indicator">
+                        <i class="fa-solid fa-wifi text-violet-500"></i>
                     </div>
                     <div class="text-left">
                         <p class="text-xs font-bold text-slate-800 dark:text-slate-100">Esperando conexión...</p>
@@ -257,18 +291,18 @@
         <div id="transfer-dashboard" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch max-w-5xl z-10">
             
             <!-- PANEL IZQUIERDO: SECCIÓN DE ENVÍO -->
-            <div class="lg:col-span-5 flex flex-col p-6 glass-panel rounded-2xl relative overflow-hidden shadow-2xl">
+            <div class="lg:col-span-5 flex flex-col p-6 glass-panel rounded-[2rem] relative overflow-hidden shadow-2xl">
                 
                 <div class="mb-5 z-10">
                     <span class="bg-violet-500/10 text-violet-600 dark:text-violet-400 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-violet-500/15">
-                        <i class="fa-solid fa-paper-plane mr-1"></i> Transmisión
+                        <i class="fa-solid fa-paper-plane mr-1 animate-pulse"></i> Transmisión
                     </span>
                     <h2 class="text-lg font-bold mt-4 text-slate-900 dark:text-white">Enviar Archivos</h2>
-                    <p class="text-xs text-slate-550 dark:text-slate-400 mt-1 font-medium">Sube cualquier archivo para mandarlo de inmediato al otro dispositivo.</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium leading-relaxed">Arrastra o selecciona archivos para enviarlos en caliente.</p>
                 </div>
 
                 <!-- Dropzone de Archivo -->
-                <div id="dropzone" class="flex-grow border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-violet-500/80 rounded-xl p-8 text-center bg-white/10 dark:bg-slate-950/20 hover:bg-violet-500/5 transition-all duration-300 cursor-pointer mb-6 z-10 flex flex-col justify-center items-center">
+                <div id="dropzone" class="flex-grow border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-violet-500/85 rounded-2xl p-8 text-center bg-white/10 dark:bg-slate-950/20 hover:bg-violet-500/5 transition-all duration-300 cursor-pointer mb-6 z-10 flex flex-col justify-center items-center">
                     <input type="file" id="file-input" class="hidden">
                     
                     <div id="dropzone-idle" class="space-y-4">
@@ -277,7 +311,7 @@
                         </div>
                         <div>
                             <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Selecciona o arrastra un archivo</p>
-                            <p class="text-slate-550 dark:text-slate-400 text-[10px] mt-1 font-semibold">Soporta fotos, vídeos, PDFs, etc. de hasta 100MB</p>
+                            <p class="text-slate-500 dark:text-slate-400 text-[10px] mt-1 font-semibold">Soporta cualquier formato hasta 100MB</p>
                         </div>
                     </div>
 
@@ -292,7 +326,7 @@
                             <span class="absolute text-xs font-black text-violet-550 dark:text-violet-400" id="progress-percentage">0%</span>
                         </div>
                         <p class="text-sm font-bold text-slate-800 dark:text-slate-100" id="upload-status-title">Transmitiendo...</p>
-                        <p class="text-slate-550 dark:text-slate-400 text-[10px] mt-1 font-medium" id="upload-status-details">Cargando datos en la nube temporal...</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-[10px] mt-1 font-medium" id="upload-status-details">Cargando datos en la nube temporal...</p>
                     </div>
                 </div>
 
@@ -319,7 +353,7 @@
             </div>
 
             <!-- PANEL DERECHO: BANDEJA DE ENTRADA -->
-            <div class="lg:col-span-7 flex flex-col p-6 glass-panel rounded-2xl relative overflow-hidden shadow-2xl">
+            <div class="lg:col-span-7 flex flex-col p-6 glass-panel rounded-[2rem] relative overflow-hidden shadow-2xl">
                 
                 <div class="flex justify-between items-center mb-6 z-10">
                     <div>
@@ -337,7 +371,7 @@
                         <i class="fa-solid fa-file-circle-minus text-2xl text-slate-400 dark:text-slate-500"></i>
                     </div>
                     <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Bandeja de entrada vacía</p>
-                    <p class="text-slate-500 dark:text-slate-400 text-xs max-w-xs mt-2 leading-relaxed font-medium">Los archivos que cargues en tu celular o computadora sincronizada se listarán aquí en tiempo real de forma bidireccional.</p>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs max-w-xs mt-2 leading-relaxed font-medium">Los archivos compartidos en esta sesión aparecerán aquí inmediatamente.</p>
                 </div>
 
                 <!-- Lista de Archivos Recibidos -->
@@ -346,9 +380,9 @@
                 </div>
                 
                 <!-- Opciones de Configuración Rápida -->
-                <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-850 flex items-center justify-between text-[11px] text-slate-555 dark:text-slate-400">
+                <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-850 flex items-center justify-between text-[11px] text-slate-550 dark:text-slate-400">
                     <span class="flex items-center gap-1.5 font-bold">
-                        <i class="fa-solid fa-bell text-violet-500"></i> Alertas de sonido activas
+                        <i class="fa-solid fa-bell text-violet-500 animate-pulse"></i> Alertas de sonido activas
                     </span>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="auto-download-toggle" class="sr-only peer">
@@ -364,14 +398,14 @@
 
     <!-- VENTANA EMERGENTE DE VISTA PREVIA (MODAL) -->
     <div id="preview-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md transition-all duration-300">
-        <div class="bg-white/90 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl relative flex flex-col">
+        <div class="bg-white/90 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-850 w-full max-w-2xl rounded-[2rem] overflow-hidden shadow-2xl relative flex flex-col">
             <!-- Barra superior del Modal -->
             <div class="p-4 border-b border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/40">
                 <div class="flex items-center gap-2 overflow-hidden mr-4">
                     <i id="modal-icon" class="fa-solid fa-image text-violet-500 text-sm"></i>
-                    <span id="modal-title" class="text-xs font-bold text-slate-855 dark:text-slate-200 truncate">Vista Previa de Archivo</span>
+                    <span id="modal-title" class="text-xs font-bold text-slate-850 dark:text-slate-200 truncate">Vista Previa de Archivo</span>
                 </div>
-                <button onclick="closePreviewModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-850 text-slate-555 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors shadow-sm">
+                <button onclick="closePreviewModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-850 text-slate-550 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors shadow-sm">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -404,7 +438,7 @@
                 <button onclick="closePreviewModal()" class="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-850 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-300 transition-colors shadow-sm">
                     Cerrar
                 </button>
-                <button id="modal-download-btn" onclick="" class="bg-violet-650 hover:bg-violet-600 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition-all duration-200 flex items-center gap-1.5 shadow-lg shadow-violet-600/10 hover:shadow-violet-500/20">
+                <button id="modal-download-btn" onclick="" class="bg-violet-600 hover:bg-violet-500 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition-all duration-200 flex items-center gap-1.5 shadow-lg shadow-violet-600/20 hover:shadow-violet-500/30">
                     <i class="fa-solid fa-circle-down"></i> Guardar Archivo
                 </button>
             </div>
@@ -425,11 +459,11 @@
     </div>
 
     <!-- PIE DE PÁGINA -->
-    <footer class="w-full text-center py-6 text-[10px] text-slate-550 dark:text-slate-600 border-t border-slate-200 dark:border-slate-950/40 z-10 bg-white/10 dark:bg-slate-950/20">
+    <footer class="w-full text-center py-6 text-[10px] text-slate-500 dark:text-slate-650 border-t border-slate-200 dark:border-slate-950/40 z-10 bg-white/10 dark:bg-slate-950/20">
         <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-2">
             <p>&copy; 2026 QR-Drop. Transferencia bidireccional instantánea y temporal.</p>
             <div class="flex gap-4 font-bold uppercase tracking-wider text-[9px]">
-                <span class="hover:text-slate-700 dark:hover:text-slate-400 transition-colors"><i class="fa-solid fa-shield-halved mr-1 text-slate-400 dark:text-slate-500"></i> Archivos Temporales</span>
+                <span class="hover:text-slate-700 dark:hover:text-slate-400 transition-colors"><i class="fa-solid fa-shield-halved mr-1 text-slate-400 dark:text-slate-500 animate-pulse"></i> Archivos Temporales</span>
                 <span class="hover:text-slate-700 dark:hover:text-slate-400 transition-colors"><i class="fa-solid fa-arrows-rotate mr-1 text-slate-400 dark:text-slate-500"></i> Bidireccional</span>
             </div>
         </div>
@@ -442,9 +476,6 @@
         let isMobileSession = false;
         let eventSource = null;
         let activeReceivedFilesCount = 0;
-        let currentPreviewBlobUrl = null;
-        // Nueva variable para gestionar cancelaciones de carga
-        let currentAbortController = null; 
         const clientId = "client_" + Math.random().toString(36).substring(2, 15);
 
         // INICIALIZADOR SEGURO QUE PREVIENE PANTALLAS ATASCADAS (READYSTATE CHECK)
@@ -497,8 +528,8 @@
                 body.classList.add('dark-mode');
                 document.documentElement.classList.add('dark');
                 
-                // Icono Sol para cambiar a claro
-                themeIcon.className = "fa-solid fa-sun text-sm text-amber-500";
+                // Icono Sol para cambiar a claro con sutil pulso animado
+                themeIcon.className = "fa-solid fa-sun text-sm text-amber-550 animate-pulse";
                 localStorage.setItem('theme', 'dark');
             } else {
                 body.classList.remove('dark-mode');
@@ -506,7 +537,7 @@
                 document.documentElement.classList.remove('dark');
                 
                 // Icono Luna para cambiar a oscuro
-                themeIcon.className = "fa-solid fa-moon text-sm text-indigo-500";
+                themeIcon.className = "fa-solid fa-moon text-sm text-violet-550";
                 localStorage.setItem('theme', 'light');
             }
         }
@@ -609,7 +640,7 @@
                 tempInput.select();
                 try {
                     document.execCommand('copy');
-                    showToast("Enlace Copiado", "El enlace se guardó en el portapapeles.", "blue");
+                    showToast("Enlace Copiado", "El enlace se guardó en el portapapeles.", "violet");
                 } catch (e) {
                     console.error(e);
                 }
@@ -655,14 +686,14 @@
             // Drag & Drop
             dropzone.ondragover = (e) => {
                 e.preventDefault();
-                dropzone.classList.add('border-blue-500', 'bg-blue-500/5');
+                dropzone.classList.add('border-violet-500', 'bg-violet-500/5');
             };
             dropzone.ondragleave = () => {
-                dropzone.classList.remove('border-blue-500', 'bg-blue-500/5');
+                dropzone.classList.remove('border-violet-500', 'bg-violet-500/5');
             };
             dropzone.ondrop = (e) => {
                 e.preventDefault();
-                dropzone.classList.remove('border-blue-500', 'bg-blue-500/5');
+                dropzone.classList.remove('border-violet-500', 'bg-violet-500/5');
                 if (e.dataTransfer.files.length > 0) {
                     handleFileSelection(e.dataTransfer.files[0]);
                 }
@@ -814,7 +845,7 @@
 
             activeReceivedFilesCount++;
             playChimeSound();
-            showToast("¡Archivo Recibido!", `"${file.name}" listo para descargar o previsualizar.`, "indigo");
+            showToast("¡Archivo Recibido!", `"${file.name}" listo para descargar o previsualizar.`, "violet");
 
             // Comportamiento de Auto-descarga
             if (document.getElementById('auto-download-toggle').checked) {
@@ -822,7 +853,7 @@
             }
 
             const card = document.createElement('div');
-            card.className = "flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-white/20 dark:bg-slate-900/90 border border-slate-200/50 dark:border-slate-800/85 rounded-xl hover:border-slate-400 dark:hover:border-slate-700/80 transition-all duration-300 gap-3";
+            card.className = "flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-white/10 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/85 rounded-xl hover:border-slate-400 dark:hover:border-slate-700/80 transition-all duration-300 gap-3";
             
             const fileIconClass = getFileIcon(file.name);
             const sizeStr = formatBytes(file.size);
@@ -841,7 +872,7 @@
                     <button onclick="openPreviewModal('${file.url}', '${file.name}')" class="bg-white/40 hover:bg-white/80 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs px-3 py-2 rounded-lg font-bold transition-all duration-200 flex items-center gap-1.5 border border-slate-200/60 dark:border-transparent shadow-sm">
                         <i class="fa-solid fa-eye text-violet-500"></i> Ver
                     </button>
-                    <button onclick="triggerDownload('${file.url}', '${file.name}', this)" class="bg-violet-600 hover:bg-violet-500 text-white text-xs px-3.5 py-2 rounded-lg font-bold transition-all duration-200 flex items-center gap-1.5 shadow-lg shadow-violet-600/10 hover:shadow-blue-500/20">
+                    <button onclick="triggerDownload('${file.url}', '${file.name}', this)" class="bg-violet-600 hover:bg-violet-500 text-white text-xs px-3.5 py-2 rounded-lg font-bold transition-all duration-200 flex items-center gap-1.5 shadow-lg shadow-violet-600/10 hover:shadow-violet-500/20">
                         <i class="fa-solid fa-circle-down"></i> Descargar
                     </button>
                 </div>
@@ -849,8 +880,8 @@
             filesList.insertBefore(card, filesList.firstChild);
         }
 
-        // --- SISTEMA DE VISTA PREVIA ULTRA-COMPATIBLE POR BLOB LOCAL (image_78f7b6.png) ---
-        window.openPreviewModal = async function(url, filename) {
+        // --- SISTEMA DE VISTA PREVIA (MODAL) ---
+        window.openPreviewModal = function(url, filename) {
             const modal = document.getElementById('preview-modal');
             const mTitle = document.getElementById('modal-title');
             const mIcon = document.getElementById('modal-icon');
@@ -868,87 +899,56 @@
             mAudio.classList.add('hidden');
             mFallback.classList.add('hidden');
 
-        // --- SISTEMA DE VISTA PREVIA ULTRA-COMPATIBLE (OPTIMIZADO) ---
-        window.openPreviewModal = async function(url, filename) {
-            const modal = document.getElementById('preview-modal');
-            const mTitle = document.getElementById('modal-title');
-            const mIcon = document.getElementById('modal-icon');
-            const mLoader = document.getElementById('modal-loader');
-            const mDownloadBtn = document.getElementById('modal-download-btn');
-
-            const mImage = document.getElementById('modal-image-preview');
-            const mVideo = document.getElementById('modal-video-preview');
-            const mAudio = document.getElementById('modal-audio-preview');
-            const mFallback = document.getElementById('modal-fallback');
-
-            // Resetear estado
-            mImage.classList.add('hidden');
-            mVideo.classList.add('hidden');
-            mAudio.classList.add('hidden');
-            mFallback.classList.add('hidden');
-            mLoader.classList.remove('hidden');
-
-            // Cancelar cualquier descarga previa en curso antes de empezar una nueva
-            if (currentAbortController) currentAbortController.abort();
-            currentAbortController = new AbortController();
-
             mTitle.textContent = filename;
             mIcon.className = getFileIcon(filename) + " text-violet-500 text-sm";
-            modal.classList.remove('hidden');
+            mLoader.classList.remove('hidden');
 
-            mDownloadBtn.onclick = function() {
+            // Configurar botón de descarga de la modal
+            mDownloadBtn.onclick = function(e) {
                 triggerDownload(url, filename, mDownloadBtn);
             };
 
             const ext = filename.split('.').pop().toLowerCase();
 
-            try {
-                // Si es imagen, usamos el fetch para tener control sobre la carga (y poder abortarla)
-                if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
-                    const response = await fetch(url, { signal: currentAbortController.signal });
-                    const blob = await response.blob();
-                    
-                    if (currentPreviewBlobUrl) URL.revokeObjectURL(currentPreviewBlobUrl);
-                    currentPreviewBlobUrl = URL.createObjectURL(blob);
-                    
-                    mImage.src = currentPreviewBlobUrl;
-                    mImage.onload = () => mLoader.classList.add('hidden');
+            // Determinar tipo de previsualización
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+                mImage.src = url;
+                mImage.onload = () => {
+                    mLoader.classList.add('hidden');
                     mImage.classList.remove('hidden');
-                } 
-                // Para video/audio, mantenemos carga nativa porque los navegadores lo optimizan mejor (streaming)
-                else if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
-                    mVideo.src = url;
-                    mVideo.onloadeddata = () => mLoader.classList.add('hidden');
+                };
+                mImage.onerror = () => {
+                    mLoader.classList.add('hidden');
+                    mFallback.classList.remove('hidden');
+                };
+            } else if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
+                mVideo.src = url;
+                mVideo.onloadeddata = () => {
+                    mLoader.classList.add('hidden');
                     mVideo.classList.remove('hidden');
-                } else if (['mp3', 'wav', 'flac'].includes(ext)) {
-                    mAudio.src = url;
-                    mAudio.onloadeddata = () => mLoader.classList.add('hidden');
-                    mAudio.classList.remove('hidden');
-                } else {
+                };
+                mVideo.onerror = () => {
                     mLoader.classList.add('hidden');
                     mFallback.classList.remove('hidden');
-                }
-            } catch (err) {
-                if (err.name === 'AbortError') {
-                    console.log("Carga cancelada por el usuario.");
-                } else {
-                    mLoader.classList.add('hidden');
-                    mFallback.classList.remove('hidden');
-                }
+                };
+            } else if (['mp3', 'wav', 'flac'].includes(ext)) {
+                mAudio.src = url;
+                mLoader.classList.add('hidden');
+                mAudio.classList.remove('hidden');
+            } else {
+                // Fallback para tipos de archivo no soportados
+                mLoader.classList.add('hidden');
+                mFallback.classList.remove('hidden');
             }
+
+            modal.classList.remove('hidden');
         };
 
         window.closePreviewModal = function() {
-            // Abortar carga si se cierra el modal
-            if (currentAbortController) {
-                currentAbortController.abort();
-                currentAbortController = null;
-            }
-            
             const modal = document.getElementById('preview-modal');
             modal.classList.add('hidden');
 
-            // Limpiar fuentes
+            // Detener y vaciar fuentes para detener reproducción de audio/video y liberar RAM
             document.getElementById('modal-image-preview').src = "";
             const video = document.getElementById('modal-video-preview');
             video.pause();
@@ -958,11 +958,6 @@
             audio.pause();
             audio.removeAttribute('src');
             audio.load();
-
-            if (currentPreviewBlobUrl) {
-                URL.revokeObjectURL(currentPreviewBlobUrl);
-                currentPreviewBlobUrl = null;
-            }
         };
 
         // DESCARGA ASÍNCRONA POR BLOBS PARA DETENER LA APERTURA DE NUEVAS PESTAÑAS
@@ -1020,7 +1015,7 @@
                 document.getElementById('receiver-empty-state').classList.remove('hidden');
                 document.getElementById('receiver-files-list').classList.add('hidden');
                 document.getElementById('clear-list-btn').classList.add('hidden');
-                showToast("Bandeja Vacía", "Se borró el registro local de archivos.", "blue");
+                showToast("Bandeja Vacía", "Se borró el registro local de archivos.", "violet");
             }
         };
 
@@ -1060,7 +1055,7 @@
                     value: urlText,
                     size: 200,
                     background: '#ffffff',
-                    foreground: '#06020f'
+                    foreground: '#0b0f19'
                 });
             } catch (err) {
                 console.error("Fallo al construir Canvas del QR:", err);
@@ -1117,21 +1112,21 @@
                 toast.classList.add('translate-y-0', 'opacity-100');
                 toast.firstChild.className = "glass-panel border-l-4 border-red-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
                 tIcon.classList.add('bg-red-500/15', 'text-red-500', 'dark:text-red-400');
-                tIcon.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+                tIcon.innerHTML = '<i class="fa-solid fa-circle-exclamation animate-bounce"></i>';
             } else if (themeColor === "emerald") {
                 toast.classList.add('translate-y-0', 'opacity-100');
                 toast.firstChild.className = "glass-panel border-l-4 border-emerald-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
                 tIcon.classList.add('bg-emerald-500/15', 'text-emerald-600', 'dark:text-emerald-400');
                 tIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
-            } else if (themeColor === "indigo") {
+            } else if (themeColor === "violet") {
                 toast.classList.add('translate-y-0', 'opacity-100');
-                toast.firstChild.className = "glass-panel border-l-4 border-indigo-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
-                tIcon.classList.add('bg-indigo-500/15', 'text-indigo-600', 'dark:text-indigo-400');
+                toast.firstChild.className = "glass-panel border-l-4 border-violet-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
+                tIcon.classList.add('bg-violet-500/15', 'text-violet-600', 'dark:text-violet-400');
                 tIcon.innerHTML = '<i class="fa-solid fa-satellite-dish"></i>';
             } else {
                 toast.classList.add('translate-y-0', 'opacity-100');
-                toast.firstChild.className = "glass-panel border-l-4 border-blue-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
-                tIcon.classList.add('bg-blue-500/15', 'text-blue-600', 'dark:text-blue-400');
+                toast.firstChild.className = "glass-panel border-l-4 border-indigo-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
+                tIcon.classList.add('bg-indigo-500/15', 'text-indigo-650', 'dark:text-indigo-400');
                 tIcon.innerHTML = '<i class="fa-solid fa-info"></i>';
             }
 
