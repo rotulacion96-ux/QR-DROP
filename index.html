@@ -33,130 +33,165 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            transition: background 0.3s ease, color 0.3s ease;
+            transition: background-color 0.5s ease, color 0.5s ease;
         }
         /* Fondos responsivos según el modo actual */
         body.dark-mode {
-            background: radial-gradient(circle at 50% 50%, #0b0f19 0%, #030712 100%);
+            background-color: #030712;
         }
         body.light-mode {
-            background: radial-gradient(circle at 50% 50%, #f8fafc 0%, #e2e8f0 100%);
+            background-color: #f1f5f9;
         }
+        /* Efecto de Vidrio Esmerilado Premium (Glassmorphism) */
         .glass-panel {
-            backdrop-filter: blur(16px);
-            transition: background 0.3s ease, border-color 0.3s ease;
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s ease, box-shadow 0.4s ease;
         }
         .dark-mode .glass-panel {
-            background: rgba(17, 24, 39, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(17, 24, 39, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
         .light-mode .glass-panel {
-            background: rgba(255, 255, 255, 0.75);
+            background: rgba(255, 255, 255, 0.55);
             border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.06);
         }
+        /* Borde degradado para códigos QR o contenedores destacados */
         .gradient-border {
             position: relative;
-            border-radius: 1rem;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
-            padding: 1px;
+            border-radius: 1.25rem;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.5), rgba(139, 92, 246, 0.5), rgba(236, 72, 153, 0.5));
+            padding: 2px;
         }
         .gradient-border-inner {
-            border-radius: 15px;
-            transition: background 0.3s ease;
+            border-radius: 18px;
+            transition: background 0.4s ease;
         }
         .dark-mode .gradient-border-inner {
-            background: #030712;
+            background: #090d16;
         }
         .light-mode .gradient-border-inner {
             background: #ffffff;
         }
+        
+        /* ANIMACIONES DE FLOTACIÓN SUAVE (EFECTO AMBIENTAL) */
+        @keyframes float-slow {
+            0%, 100% {
+                transform: translateY(0px) scale(1);
+            }
+            50% {
+                transform: translateY(-30px) scale(1.05);
+            }
+        }
+        @keyframes float-reverse {
+            0%, 100% {
+                transform: translateY(0px) scale(1.05);
+            }
+            50% {
+                transform: translateY(30px) scale(1);
+            }
+        }
+        .animate-float-1 {
+            animation: float-slow 12s ease-in-out infinite;
+        }
+        .animate-float-2 {
+            animation: float-reverse 15s ease-in-out infinite;
+        }
+        .animate-float-3 {
+            animation: float-slow 18s ease-in-out infinite;
+        }
+
         /* Personalización de scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: rgba(15, 23, 42, 0.05);
+            background: rgba(15, 23, 42, 0.02);
         }
         ::-webkit-scrollbar-thumb {
             background: rgba(59, 130, 246, 0.3);
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(59, 130, 246, 0.5);
+            background: rgba(59, 130, 246, 0.6);
         }
     </style>
 </head>
-<body class="min-h-screen text-slate-100 dark-mode flex flex-col justify-between overflow-x-hidden antialiased">
+<body class="min-h-screen text-slate-800 dark:text-slate-100 dark-mode flex flex-col justify-between overflow-x-hidden antialiased relative">
+
+    <!-- ESFERAS DE LUZ DECORATIVAS CON ANIMACIÓN EN TIEMPO REAL -->
+    <div class="fixed top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-blue-500/10 dark:bg-blue-500/15 blur-[120px] pointer-events-none z-0 transition-opacity duration-500 animate-float-1"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-indigo-500/10 dark:bg-purple-650/15 blur-[130px] pointer-events-none z-0 transition-opacity duration-500 animate-float-2"></div>
+    <div class="fixed top-[40%] left-[30%] w-[30vw] h-[30vw] rounded-full bg-pink-500/5 dark:bg-pink-500/10 blur-[110px] pointer-events-none z-0 transition-opacity duration-500 animate-float-3"></div>
 
     <!-- CABECERA -->
-    <header class="w-full max-w-7xl mx-auto px-6 py-5 flex justify-between items-center z-10">
+    <header class="w-full max-w-7xl mx-auto px-6 py-5 flex justify-between items-center z-10 relative">
         <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20 animate-pulse">
                 <i class="fa-solid fa-arrows-rotate text-white text-lg"></i>
             </div>
             <div>
-                <h1 class="text-xl font-black tracking-tight class-theme-title bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent" id="app-brand-title">QR-Drop</h1>
-                <p class="text-[10px] text-blue-500 dark:text-blue-400 font-semibold tracking-wider uppercase">Canal Bidireccional Nube</p>
+                <h1 class="text-xl font-black tracking-tight bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:via-slate-100 dark:to-slate-400 bg-clip-text text-transparent" id="app-brand-title">QR-Drop</h1>
+                <p class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold tracking-wider uppercase">Canal Bidireccional Nube</p>
             </div>
         </div>
         
         <div class="flex items-center gap-3">
             <!-- Botón de Modo Día / Noche -->
-            <button onclick="toggleTheme()" class="w-9 h-9 rounded-lg flex items-center justify-center border border-slate-800 dark:border-slate-800 bg-slate-900/40 text-slate-400 hover:text-white hover:bg-slate-900/80 transition-all duration-200" id="theme-btn">
+            <button onclick="toggleTheme()" class="w-9 h-9 rounded-lg flex items-center justify-center border border-slate-200/60 dark:border-slate-800 bg-white/30 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-900/80 transition-all duration-200" id="theme-btn">
                 <i class="fa-solid fa-sun text-sm" id="theme-icon"></i>
             </button>
 
             <!-- Estado de Red -->
-            <div class="flex items-center gap-2 text-xs bg-slate-900/60 border border-slate-800 rounded-full px-3 py-1.5 shadow-md" id="status-badge">
+            <div class="flex items-center gap-2 text-xs bg-white/40 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800 rounded-full px-3 py-1.5 shadow-md" id="status-badge">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="status-pulse"></span>
-                <span class="text-slate-300 font-semibold" id="connection-status">Red Lista</span>
+                <span class="text-slate-600 dark:text-slate-300 font-semibold" id="connection-status">Red Lista</span>
             </div>
         </div>
     </header>
 
     <!-- CONTENEDOR CENTRAL DE LA APLICACIÓN -->
-    <main class="w-full max-w-5xl mx-auto px-4 md:px-6 flex-grow flex items-center justify-center py-6">
+    <main class="w-full max-w-5xl mx-auto px-4 md:px-6 flex-grow flex items-center justify-center py-6 z-10 relative">
         
         <!-- Pantalla de Carga Inicial -->
         <div id="loading-screen" class="text-center py-12 transition-all duration-300">
             <div class="inline-block relative w-16 h-16 mb-4">
-                <div class="absolute inset-0 rounded-full border-4 border-slate-800"></div>
+                <div class="absolute inset-0 rounded-full border-4 border-slate-200 dark:border-slate-800"></div>
                 <div class="absolute inset-0 rounded-full border-4 border-t-blue-500 animate-spin"></div>
             </div>
-            <p class="text-slate-400 text-sm" id="loading-text">Cargando módulos de transmisión bidireccional...</p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm" id="loading-text">Cargando módulos de transmisión bidireccional...</p>
         </div>
 
         <!-- Pantalla de Selección de Rol (PC / Celular) -->
         <div id="role-selection-screen" class="hidden w-full max-w-md mx-auto text-center z-10">
             <div class="glass-panel p-8 rounded-2xl space-y-6 relative overflow-hidden shadow-2xl">
-                <div class="absolute -top-24 -left-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl"></div>
-                <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl"></div>
-                
                 <div>
-                    <h2 class="text-2xl font-extrabold theme-text">¿Qué deseas hacer hoy?</h2>
-                    <p class="text-xs text-slate-400 mt-2">QR-Drop permite enviar y recibir archivos de forma simultánea entre tu computadora y teléfono móvil sin importar la red.</p>
+                    <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white">¿Qué deseas hacer hoy?</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">QR-Drop permite enviar y recibir archivos de forma simultánea entre tu computadora y teléfono móvil sin importar la red.</p>
                 </div>
 
                 <div class="grid grid-cols-1 gap-4 pt-2">
                     <!-- Botón PC (Crea sala) -->
-                    <button onclick="initAsPC()" class="flex items-center gap-4 p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 hover:border-blue-500/50 hover:bg-slate-900/60 transition-all duration-300 text-left group">
-                        <div class="w-12 h-12 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 text-blue-400 flex items-center justify-center text-xl shrink-0 transition-colors">
-                            <i class="fa-solid fa-desktop"></i>
+                    <button onclick="initAsPC()" class="flex items-center gap-4 p-4 rounded-xl bg-white/20 dark:bg-slate-950/20 border border-slate-200/60 dark:border-slate-800/80 hover:border-blue-500/50 hover:bg-white/50 dark:hover:bg-slate-900/40 transition-all duration-300 text-left group">
+                        <div class="w-12 h-12 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 text-blue-500 dark:text-blue-400 flex items-center justify-center text-xl shrink-0 transition-colors">
+                            <i class="fa-solid fa-circle-arrow-down animate-pulse"></i>
                         </div>
                         <div>
-                            <p class="text-sm font-bold theme-text-item">Iniciar Sala (Desde mi PC)</p>
-                            <p class="text-[11px] text-slate-400 mt-0.5">Genera un código QR interactivo y espera a que tu celular se conecte de forma remota.</p>
+                            <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Iniciar Conexión</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">Genera un código QR interactivo y espera a que tu celular se conecte de forma remota.</p>
                         </div>
                     </button>
 
                     <!-- Botón Móvil (Se une a sala) -->
-                    <button onclick="showJoinSessionScreen()" class="flex items-center gap-4 p-4 rounded-xl bg-slate-950/40 border border-slate-800/80 hover:border-indigo-500/50 hover:bg-slate-900/60 transition-all duration-300 text-left group">
-                        <div class="w-12 h-12 rounded-lg bg-indigo-500/10 group-hover:bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl shrink-0 transition-colors">
+                    <button onclick="showJoinSessionScreen()" class="flex items-center gap-4 p-4 rounded-xl bg-white/20 dark:bg-slate-950/20 border border-slate-200/60 dark:border-slate-800/80 hover:border-indigo-500/50 hover:bg-white/50 dark:hover:bg-slate-900/40 transition-all duration-300 text-left group">
+                        <div class="w-12 h-12 rounded-lg bg-indigo-500/10 group-hover:bg-indigo-500/20 text-indigo-500 dark:text-indigo-400 flex items-center justify-center text-xl shrink-0 transition-colors">
                             <i class="fa-solid fa-paper-plane"></i>
                         </div>
                         <div>
-                            <p class="text-sm font-bold theme-text-item">Unirme a una Sala (Desde mi Celular)</p>
-                            <p class="text-[11px] text-slate-400 mt-0.5">Ingresa el código o escanea para unirte a la sesión bidireccional desde cualquier red.</p>
+                            <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Unirme a una Sala</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 font-medium">Ingresa el código o escanea para unirte a la sesión bidireccional desde cualquier red.</p>
                         </div>
                     </button>
                 </div>
@@ -167,12 +202,12 @@
         <div id="join-session-screen" class="hidden w-full max-w-md mx-auto text-center z-10">
             <div class="glass-panel p-8 rounded-2xl space-y-6 shadow-2xl">
                 <div>
-                    <h2 class="text-xl font-bold theme-text">Vincular Dispositivo</h2>
-                    <p class="text-xs text-slate-400 mt-1">Escribe el código de sala de 6 dígitos que se muestra en tu computadora.</p>
+                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Vincular Dispositivo</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Escribe el código de sala de 6 dígitos que se muestra en tu computadora.</p>
                 </div>
 
                 <div class="space-y-4">
-                    <input type="text" id="join-code-input" class="w-full bg-slate-950/80 border border-slate-850 hover:border-slate-700 focus:border-blue-500 rounded-xl py-3.5 px-4 text-center text-2xl font-black tracking-widest theme-input-text uppercase outline-none transition-all duration-200" placeholder="CÓDIGO" maxlength="6">
+                    <input type="text" id="join-code-input" class="w-full bg-white/40 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-850 hover:border-slate-400 dark:hover:border-slate-700 focus:border-blue-500 dark:focus:border-blue-500 rounded-xl py-3.5 px-4 text-center text-2xl font-black tracking-widest text-slate-900 dark:text-white uppercase outline-none transition-all duration-200" placeholder="CÓDIGO" maxlength="6">
                     
                     <button onclick="submitJoinCode()" class="w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-semibold rounded-xl py-3.5 text-sm shadow-lg shadow-blue-500/10 hover:shadow-blue-500/20 transition-all duration-300">
                         Sincronizar ahora
@@ -180,7 +215,7 @@
                 </div>
 
                 <div class="pt-2">
-                    <button onclick="showRoleSelection()" class="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+                    <button onclick="showRoleSelection()" class="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors font-semibold">
                         <i class="fa-solid fa-arrow-left mr-1"></i> Volver al inicio
                     </button>
                 </div>
@@ -190,17 +225,17 @@
         <!-- Pantalla de Espera/Emparejamiento (Código QR) -->
         <div id="pairing-screen" class="hidden w-full max-w-sm mx-auto text-center z-10">
             <div class="glass-panel p-6 rounded-2xl relative overflow-hidden shadow-2xl">
-                <span class="bg-blue-500/10 text-blue-500 dark:text-blue-400 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-blue-500/15">Vincular mi dispositivo</span>
+                <span class="bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-blue-500/15">Vincular mi dispositivo</span>
                 
                 <div class="my-5">
-                    <p class="text-[10px] text-slate-400 uppercase tracking-widest">Escribe este código en tu teléfono:</p>
-                    <h3 id="session-code-display" class="text-4xl font-black tracking-widest bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent py-2">------</h3>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold">Escribe este código en tu teléfono:</p>
+                    <h3 id="session-code-display" class="text-4xl font-black tracking-widest bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 dark:from-blue-400 dark:via-indigo-400 dark:to-purple-400 bg-clip-text text-transparent py-2">------</h3>
                 </div>
 
                 <div class="flex items-center justify-center gap-2 mb-4">
-                    <div class="h-[1px] bg-slate-800 flex-grow"></div>
+                    <div class="h-[1px] bg-slate-200 dark:bg-slate-800 flex-grow"></div>
                     <span class="text-[9px] text-slate-500 font-bold uppercase tracking-widest">O escanea el código QR</span>
-                    <div class="h-[1px] bg-slate-800 flex-grow"></div>
+                    <div class="h-[1px] bg-slate-200 dark:bg-slate-800 flex-grow"></div>
                 </div>
 
                 <!-- Código QR de Conexión -->
@@ -211,111 +246,109 @@
                 </div>
 
                 <div class="text-center mb-5">
-                    <button onclick="copySessionLink()" class="inline-flex items-center gap-1.5 text-[10px] text-slate-400 hover:text-blue-400 bg-slate-900/60 hover:bg-slate-900 border border-slate-850 px-3 py-2 rounded-lg transition-all duration-200 shadow-sm">
+                    <button onclick="copySessionLink()" class="inline-flex items-center gap-1.5 text-[10px] text-slate-550 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 bg-white/30 dark:bg-slate-900/60 hover:bg-white/60 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-850 px-3 py-2 rounded-lg transition-all duration-200 shadow-sm font-semibold">
                         <i class="fa-solid fa-copy"></i> Copiar enlace directo
                     </button>
                 </div>
 
                 <!-- Mensaje de estado -->
-                <div class="pt-4 border-t border-slate-800/80 flex items-center justify-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center text-xs text-slate-500 border border-slate-850" id="pairing-indicator">
-                        <i class="fa-solid fa-mobile-screen-button"></i>
+                <div class="pt-4 border-t border-slate-200 dark:border-slate-800/80 flex items-center justify-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-white/40 dark:bg-slate-900 flex items-center justify-center text-xs text-slate-500 border border-slate-200 dark:border-slate-850" id="pairing-indicator">
+                        <i class="fa-solid fa-mobile-screen-button animate-bounce"></i>
                     </div>
                     <div class="text-left">
-                        <p class="text-xs font-bold theme-text-item" id="pairing-status-title">Esperando conexión...</p>
-                        <p class="text-[10px] text-slate-500 leading-tight">Introduce el código o escanea el QR desde tu móvil</p>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-100">Esperando conexión...</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-tight font-medium">Introduce el código o escanea el QR desde tu móvil</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- PANEL DE CONTROL INTEGRADO Y BIDIRECCIONAL (SALA ACTIVA) -->
-        <div id="transfer-dashboard" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch max-w-5xl">
+        <div id="transfer-dashboard" class="hidden w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch max-w-5xl z-10">
             
             <!-- PANEL IZQUIERDO: SECCIÓN DE ENVÍO -->
             <div class="lg:col-span-5 flex flex-col p-6 glass-panel rounded-2xl relative overflow-hidden shadow-2xl">
-                <div class="absolute -top-24 -left-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl"></div>
                 
                 <div class="mb-5 z-10">
-                    <span class="bg-blue-500/10 text-blue-500 dark:text-blue-400 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-blue-500/15">
-                        <i class="fa-solid fa-paper-plane mr-1"></i> Transmisión
+                    <span class="bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-blue-500/15">
+                        <i class="fa-solid fa-paper-plane mr-1 animate-pulse"></i> Transmisión
                     </span>
-                    <h2 class="text-lg font-bold mt-4 theme-text">Enviar Archivos</h2>
-                    <p class="text-xs text-slate-400 mt-1">Sube cualquier archivo para mandarlo de inmediato al otro dispositivo.</p>
+                    <h2 class="text-lg font-bold mt-4 text-slate-900 dark:text-white">Enviar Archivos</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Sube cualquier archivo para mandarlo de inmediato al otro dispositivo.</p>
                 </div>
 
                 <!-- Dropzone de Archivo -->
-                <div id="dropzone" class="flex-grow border-2 border-dashed border-slate-800 dark:border-slate-800 hover:border-blue-500/80 rounded-xl p-8 text-center bg-slate-950/20 hover:bg-blue-500/5 transition-all duration-300 cursor-pointer mb-6 z-10 flex flex-col justify-center items-center">
+                <div id="dropzone" class="flex-grow border-2 border-dashed border-slate-300 dark:border-slate-800 hover:border-blue-500/80 rounded-xl p-8 text-center bg-white/10 dark:bg-slate-950/20 hover:bg-blue-500/5 transition-all duration-300 cursor-pointer mb-6 z-10 flex flex-col justify-center items-center">
                     <input type="file" id="file-input" class="hidden">
                     
                     <div id="dropzone-idle" class="space-y-4">
-                        <div class="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto border border-blue-500/25 text-blue-400">
-                            <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                        <div class="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto border border-blue-500/25 text-blue-500 dark:text-blue-400 shadow-inner">
+                            <i class="fa-solid fa-cloud-arrow-up text-xl animate-bounce"></i>
                         </div>
                         <div>
-                            <p class="theme-text-item font-bold text-sm">Selecciona o arrastra un archivo</p>
-                            <p class="text-slate-500 text-[10px] mt-1">Soporta fotos, vídeos, PDFs, etc. de hasta 100MB</p>
+                            <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Selecciona o arrastra un archivo</p>
+                            <p class="text-slate-500 dark:text-slate-400 text-[10px] mt-1 font-semibold">Soporta fotos, vídeos, PDFs, etc. de hasta 100MB</p>
                         </div>
                     </div>
 
                     <!-- Progreso de Subida -->
-                    <div id="dropzone-loading" class="hidden w-full max-w-xs">
+                    <div id="dropzone-loading" class="hidden w-full max-w-xs animate-pulse">
                         <div class="relative w-16 h-16 mx-auto mb-4 flex items-center justify-center">
                             <svg class="w-16 h-16 transform -rotate-90">
-                                <circle cx="32" cy="32" r="28" stroke="currentColor" class="text-slate-800" stroke-width="4" fill="transparent" />
+                                <circle cx="32" cy="32" r="28" stroke="currentColor" class="text-slate-300 dark:text-slate-800" stroke-width="4" fill="transparent" />
                                 <circle cx="32" cy="32" r="28" stroke="currentColor" class="text-blue-500 transition-all duration-100" stroke-width="4" fill="transparent"
                                     stroke-dasharray="175.9" stroke-dashoffset="175.9" id="progress-ring-circle" />
                             </svg>
-                            <span class="absolute text-xs font-black text-blue-400" id="progress-percentage">0%</span>
+                            <span class="absolute text-xs font-black text-blue-550 dark:text-blue-400" id="progress-percentage">0%</span>
                         </div>
-                        <p class="theme-text-item text-xs font-bold" id="upload-status-title">Transmitiendo...</p>
-                        <p class="text-slate-500 text-[10px] mt-1" id="upload-status-details">Cargando datos en la nube temporal...</p>
+                        <p class="text-sm font-bold text-slate-800 dark:text-slate-100" id="upload-status-title">Transmitiendo...</p>
+                        <p class="text-slate-500 dark:text-slate-400 text-[10px] mt-1 font-medium" id="upload-status-details">Cargando datos en la nube temporal...</p>
                     </div>
                 </div>
 
                 <!-- Alerta de Archivo Enviado con Éxito -->
                 <div id="upload-success-panel" class="hidden bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-center gap-3 mb-6 z-10">
-                    <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                    <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-500 dark:text-emerald-400 shrink-0">
                         <i class="fa-solid fa-circle-check"></i>
                     </div>
                     <div class="text-left flex-grow overflow-hidden">
-                        <p class="text-xs font-bold theme-text-item truncate" id="success-filename">archivo.jpg</p>
-                        <p class="text-[10px] text-emerald-500 font-semibold uppercase tracking-wider">¡Transmitido con éxito!</p>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate" id="success-filename">archivo.jpg</p>
+                        <p class="text-[10px] text-emerald-600 dark:text-emerald-550 font-semibold uppercase tracking-wider">¡Transmitido con éxito!</p>
                     </div>
-                    <button onclick="resetDropzone()" class="text-[10px] font-bold text-slate-300 hover:text-white bg-slate-900 hover:bg-slate-850 px-3 py-1.5 rounded-lg border border-slate-800 transition-colors">
+                    <button onclick="resetDropzone()" class="text-[10px] font-bold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-200 dark:bg-slate-900 hover:bg-slate-300 dark:hover:bg-slate-850 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-800 transition-colors shadow-sm">
                         Enviar otro
                     </button>
                 </div>
 
                 <!-- Botón Desconectar -->
                 <div class="text-center z-10">
-                    <button onclick="disconnectSession()" class="text-[10px] text-slate-500 hover:text-red-400 inline-flex items-center gap-1.5 transition-colors font-medium">
-                        <i class="fa-solid fa-unlink"></i> Desconectar de la Sala
+                    <button onclick="disconnectSession()" class="text-[10px] text-slate-550 hover:text-red-500 dark:text-slate-400 dark:hover:text-red-400 inline-flex items-center gap-1.5 transition-colors font-semibold">
+                        <i class="fa-solid fa-unlink animate-pulse"></i> Desconectar de la Sala
                     </button>
                 </div>
             </div>
 
             <!-- PANEL DERECHO: BANDEJA DE ENTRADA -->
             <div class="lg:col-span-7 flex flex-col p-6 glass-panel rounded-2xl relative overflow-hidden shadow-2xl">
-                <div class="absolute top-10 right-10 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
                 
                 <div class="flex justify-between items-center mb-6 z-10">
                     <div>
-                        <span class="bg-indigo-500/10 text-indigo-500 dark:text-indigo-400 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-indigo-500/15">Bandeja de Entrada</span>
-                        <h2 class="text-lg font-bold mt-4 theme-text">Archivos Recibidos</h2>
+                        <span class="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-wider border border-indigo-500/15">Bandeja de Entrada</span>
+                        <h2 class="text-lg font-bold mt-4 text-slate-900 dark:text-white">Archivos Recibidos</h2>
                     </div>
-                    <button id="clear-list-btn" onclick="clearReceivedFiles()" class="hidden text-xs text-slate-500 hover:text-red-400 transition-colors font-medium">
+                    <button id="clear-list-btn" onclick="clearReceivedFiles()" class="hidden text-xs text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors font-semibold">
                         <i class="fa-solid fa-trash-can mr-1"></i> Limpiar
                     </button>
                 </div>
 
                 <!-- Bandeja Vacía -->
                 <div id="receiver-empty-state" class="flex-grow flex flex-col items-center justify-center text-center py-12 z-10">
-                    <div class="w-16 h-16 rounded-2xl bg-slate-900/60 flex items-center justify-center border border-slate-850 mb-4 shadow-inner">
-                        <i class="fa-solid fa-file-circle-minus text-2xl text-slate-500"></i>
+                    <div class="w-16 h-16 rounded-2xl bg-white/30 dark:bg-slate-900/60 flex items-center justify-center border border-slate-200 dark:border-slate-850 mb-4 shadow-inner">
+                        <i class="fa-solid fa-file-circle-minus text-2xl text-slate-400 dark:text-slate-500"></i>
                     </div>
-                    <p class="theme-text-item font-bold text-sm">Bandeja de entrada vacía</p>
-                    <p class="text-slate-500 text-xs max-w-xs mt-2 leading-relaxed">Los archivos que cargues en tu celular o computadora sincronizada se listarán aquí en tiempo real de forma bidireccional.</p>
+                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100">Bandeja de entrada vacía</p>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs max-w-xs mt-2 leading-relaxed font-medium">Los archivos que cargues en tu celular o computadora sincronizada se listarán aquí en tiempo real de forma bidireccional.</p>
                 </div>
 
                 <!-- Lista de Archivos Recibidos -->
@@ -324,14 +357,14 @@
                 </div>
                 
                 <!-- Opciones de Configuración Rápida -->
-                <div class="mt-6 pt-4 border-t border-slate-800/80 dark:border-slate-850 flex items-center justify-between text-[11px] text-slate-400">
-                    <span class="flex items-center gap-1.5 font-medium">
+                <div class="mt-6 pt-4 border-t border-slate-200 dark:border-slate-850 flex items-center justify-between text-[11px] text-slate-550 dark:text-slate-400">
+                    <span class="flex items-center gap-1.5 font-bold">
                         <i class="fa-solid fa-bell text-blue-500 animate-pulse"></i> Alertas de sonido activas
                     </span>
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="auto-download-toggle" class="sr-only peer">
-                        <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                        <span class="ml-2 font-bold text-slate-300 uppercase tracking-wider text-[9px]">Autodescarga</span>
+                        <div class="w-9 h-5 bg-slate-200 dark:bg-slate-850 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-400 dark:after:bg-slate-400 after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                        <span class="ml-2 font-black text-slate-600 dark:text-slate-300 uppercase tracking-wider text-[9px]">Autodescarga</span>
                     </label>
                 </div>
             </div>
@@ -341,25 +374,25 @@
     </main>
 
     <!-- VENTANA EMERGENTE DE VISTA PREVIA (MODAL) -->
-    <div id="preview-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-all duration-300">
-        <div class="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl relative flex flex-col">
+    <div id="preview-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/80 backdrop-blur-md transition-all duration-300">
+        <div class="bg-white/90 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl relative flex flex-col">
             <!-- Barra superior del Modal -->
-            <div class="p-4 border-b border-slate-800/60 flex items-center justify-between bg-slate-950/40">
+            <div class="p-4 border-b border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between bg-slate-50/50 dark:bg-slate-950/40">
                 <div class="flex items-center gap-2 overflow-hidden mr-4">
                     <i id="modal-icon" class="fa-solid fa-image text-blue-500 text-sm"></i>
-                    <span id="modal-title" class="text-xs font-bold text-slate-200 truncate">Vista Previa de Archivo</span>
+                    <span id="modal-title" class="text-xs font-bold text-slate-850 dark:text-slate-200 truncate">Vista Previa de Archivo</span>
                 </div>
-                <button onclick="closePreviewModal()" class="w-8 h-8 rounded-full bg-slate-850 text-slate-400 hover:text-white flex items-center justify-center transition-colors">
+                <button onclick="closePreviewModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-850 text-slate-550 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors shadow-sm">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
             <!-- Contenedor del Archivo en Calidad Media -->
-            <div class="p-6 flex-grow flex items-center justify-center min-h-[250px] max-h-[70vh] overflow-y-auto bg-slate-950/30">
+            <div class="p-6 flex-grow flex items-center justify-center min-h-[250px] max-h-[70vh] overflow-y-auto bg-slate-50/30 dark:bg-slate-950/30">
                 <!-- Indicador de Carga del recurso -->
                 <div id="modal-loader" class="absolute hidden flex flex-col items-center gap-2">
                     <i class="fa-solid fa-circle-notch animate-spin text-2xl text-blue-500"></i>
-                    <span class="text-[10px] text-slate-500">Cargando vista previa...</span>
+                    <span class="text-[10px] text-slate-500 font-medium">Cargando vista previa...</span>
                 </div>
                 
                 <!-- Contenedores según tipo de archivo -->
@@ -369,17 +402,17 @@
                 
                 <!-- Fallback si no es previsualizable directamente -->
                 <div id="modal-fallback" class="hidden text-center space-y-3 p-8">
-                    <div class="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 text-2xl mx-auto shadow-inner">
+                    <div class="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500 text-2xl mx-auto shadow-inner">
                         <i class="fa-solid fa-circle-info"></i>
                     </div>
-                    <p class="text-xs font-bold text-slate-300">Este archivo no soporta previsualización en vivo</p>
-                    <p class="text-[10px] text-slate-500 max-w-xs">Puedes descargarlo directamente a tu dispositivo usando el botón de abajo.</p>
+                    <p class="text-xs font-bold text-slate-700 dark:text-slate-300">Este archivo no soporta previsualización en vivo</p>
+                    <p class="text-[10px] text-slate-500 max-w-xs font-medium">Puedes descargarlo directamente a tu dispositivo usando el botón de abajo.</p>
                 </div>
             </div>
 
             <!-- Barra inferior con Acciones del Modal -->
-            <div class="p-4 border-t border-slate-800/60 flex items-center justify-end gap-3 bg-slate-950/40">
-                <button onclick="closePreviewModal()" class="px-4 py-2 border border-slate-800 hover:bg-slate-850 text-xs font-bold rounded-xl text-slate-300 transition-colors">
+            <div class="p-4 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-end gap-3 bg-slate-50/50 dark:bg-slate-950/40">
+                <button onclick="closePreviewModal()" class="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-850 text-xs font-bold rounded-xl text-slate-600 dark:text-slate-300 transition-colors shadow-sm">
                     Cerrar
                 </button>
                 <button id="modal-download-btn" onclick="" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-5 py-2.5 rounded-xl font-bold transition-all duration-200 flex items-center gap-1.5 shadow-lg shadow-blue-600/10 hover:shadow-blue-500/20">
@@ -392,23 +425,23 @@
     <!-- TOAST NOTIFICATION HUB -->
     <div id="notification-toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
         <div class="glass-panel border-l-4 border-blue-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm">
-            <div class="w-8 h-8 rounded-full bg-blue-500/15 flex items-center justify-center text-blue-400 shrink-0" id="notification-icon">
+            <div class="w-8 h-8 rounded-full bg-blue-500/15 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0" id="notification-icon">
                 <i class="fa-solid fa-info"></i>
             </div>
             <div>
-                <p class="text-xs font-bold theme-text-item" id="notification-title">Alerta</p>
-                <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed" id="notification-message">Mensaje del sistema.</p>
+                <p class="text-xs font-bold text-slate-800 dark:text-slate-100" id="notification-title">Alerta</p>
+                <p class="text-[11px] text-slate-550 dark:text-slate-400 mt-0.5 leading-relaxed font-medium" id="notification-message">Mensaje del sistema.</p>
             </div>
         </div>
     </div>
 
     <!-- PIE DE PÁGINA -->
-    <footer class="w-full text-center py-6 text-[10px] text-slate-600 border-t border-slate-950/40 z-10 bg-slate-950/20">
+    <footer class="w-full text-center py-6 text-[10px] text-slate-500 dark:text-slate-600 border-t border-slate-200 dark:border-slate-950/40 z-10 bg-white/10 dark:bg-slate-950/20">
         <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-2">
             <p>&copy; 2026 QR-Drop. Transferencia bidireccional instantánea y temporal.</p>
-            <div class="flex gap-4 font-semibold uppercase tracking-wider text-[9px]">
-                <span class="hover:text-slate-400 transition-colors"><i class="fa-solid fa-shield-halved mr-1 text-slate-500"></i> Archivos Temporales</span>
-                <span class="hover:text-slate-400 transition-colors"><i class="fa-solid fa-arrows-rotate mr-1 text-slate-500"></i> Bidireccional</span>
+            <div class="flex gap-4 font-bold uppercase tracking-wider text-[9px]">
+                <span class="hover:text-slate-700 dark:hover:text-slate-400 transition-colors"><i class="fa-solid fa-shield-halved mr-1 text-slate-400 dark:text-slate-500 animate-pulse"></i> Archivos Temporales</span>
+                <span class="hover:text-slate-700 dark:hover:text-slate-400 transition-colors"><i class="fa-solid fa-arrows-rotate mr-1 text-slate-400 dark:text-slate-500"></i> Bidireccional</span>
             </div>
         </div>
     </footer>
@@ -422,8 +455,8 @@
         let activeReceivedFilesCount = 0;
         const clientId = "client_" + Math.random().toString(36).substring(2, 15);
 
-        // Inicializar Aplicación al Cargar Ventana
-        window.onload = function() {
+        // INICIALIZADOR SEGURO QUE PREVIENE PANTALLAS ATASCADAS (READYSTATE CHECK)
+        function initApp() {
             // Cargar Tema
             initTheme();
 
@@ -440,7 +473,14 @@
             } else {
                 showRoleSelection();
             }
-        };
+        }
+
+        // Ejecutar inmediatamente si el DOM ya cargó
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            initApp();
+        } else {
+            window.addEventListener('DOMContentLoaded', initApp);
+        }
 
         // --- SISTEMA DE TEMA CLARO/OSCURO ---
         function initTheme() {
@@ -448,40 +488,25 @@
             applyTheme(savedTheme);
         }
 
+        // Alternar tema y sincronizar clases de Tailwind
         function toggleTheme() {
             const currentTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
             const targetTheme = currentTheme === 'dark' ? 'light' : 'dark';
             applyTheme(targetTheme);
         }
 
+        // Aplicación del tema en caliente
         function applyTheme(theme) {
             const body = document.body;
             const themeIcon = document.getElementById('theme-icon');
-            const themeBtn = document.getElementById('theme-btn');
-            const appBrandTitle = document.getElementById('app-brand-title');
-            const statusBadge = document.getElementById('status-badge');
-            const qrBgBox = document.getElementById('qr-bg-box');
 
             if (theme === 'dark') {
                 body.classList.remove('light-mode');
                 body.classList.add('dark-mode');
                 document.documentElement.classList.add('dark');
                 
-                // Icono Sol para cambiar a claro
-                themeIcon.className = "fa-solid fa-sun text-sm text-amber-500";
-                
-                // Ajustes de clases específicos
-                appBrandTitle.className = "text-xl font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent";
-                statusBadge.className = "flex items-center gap-2 text-xs bg-slate-900/60 border border-slate-800 rounded-full px-3 py-1.5 shadow-md";
-                
-                // Actualizar textos globales
-                document.querySelectorAll('.theme-text').forEach(el => el.className = "text-2xl font-extrabold text-white theme-text");
-                document.querySelectorAll('.theme-text-item').forEach(el => el.className = "text-sm font-bold text-slate-100 theme-text-item");
-                document.querySelectorAll('.theme-input-text').forEach(el => {
-                    el.classList.add('bg-slate-950/80', 'border-slate-850', 'text-white');
-                    el.classList.remove('bg-white', 'border-slate-300', 'text-slate-900');
-                });
-
+                // Icono Sol para cambiar a claro con sutil pulso animado
+                themeIcon.className = "fa-solid fa-sun text-sm text-amber-500 animate-pulse";
                 localStorage.setItem('theme', 'dark');
             } else {
                 body.classList.remove('dark-mode');
@@ -490,19 +515,6 @@
                 
                 // Icono Luna para cambiar a oscuro
                 themeIcon.className = "fa-solid fa-moon text-sm text-indigo-500";
-                
-                // Ajustes de clases específicos
-                appBrandTitle.className = "text-xl font-black tracking-tight bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent";
-                statusBadge.className = "flex items-center gap-2 text-xs bg-white border border-slate-300/80 text-slate-800 rounded-full px-3 py-1.5 shadow-sm";
-                
-                // Actualizar textos globales
-                document.querySelectorAll('.theme-text').forEach(el => el.className = "text-2xl font-extrabold text-slate-900 theme-text");
-                document.querySelectorAll('.theme-text-item').forEach(el => el.className = "text-sm font-bold text-slate-900 theme-text-item");
-                document.querySelectorAll('.theme-input-text').forEach(el => {
-                    el.classList.remove('bg-slate-950/80', 'border-slate-850', 'text-white');
-                    el.classList.add('bg-white', 'border-slate-300', 'text-slate-900');
-                });
-
                 localStorage.setItem('theme', 'light');
             }
         }
@@ -756,6 +768,7 @@
             xhr.send(formData);
         }
 
+        // Actualizar porcentaje del aro de progreso SVG
         function updateUploadProgress(percent) {
             document.getElementById('progress-percentage').textContent = percent + "%";
             const circle = document.getElementById('progress-ring-circle');
@@ -817,24 +830,24 @@
             }
 
             const card = document.createElement('div');
-            card.className = "flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-slate-900/90 border border-slate-800/85 rounded-xl hover:border-slate-700/80 transition-all duration-300 gap-3";
+            card.className = "flex flex-col sm:flex-row sm:items-center justify-between p-3.5 bg-white/20 dark:bg-slate-900/90 border border-slate-200/50 dark:border-slate-800/85 rounded-xl hover:border-slate-400 dark:hover:border-slate-700/80 transition-all duration-300 gap-3";
             
             const fileIconClass = getFileIcon(file.name);
             const sizeStr = formatBytes(file.size);
 
             card.innerHTML = `
                 <div class="flex items-center gap-3 overflow-hidden">
-                    <div class="w-10 h-10 rounded-lg bg-slate-850 flex items-center justify-center text-blue-400 shrink-0 border border-slate-800">
+                    <div class="w-10 h-10 rounded-lg bg-white/50 dark:bg-slate-850 flex items-center justify-center text-blue-500 dark:text-blue-400 shrink-0 border border-slate-200 dark:border-slate-800 shadow-sm">
                         <i class="${fileIconClass} text-lg"></i>
                     </div>
                     <div class="text-left overflow-hidden font-medium">
-                        <p class="text-xs font-bold text-slate-100 truncate pr-4">${escapeHtml(file.name)}</p>
-                        <p class="text-[10px] text-slate-500 mt-0.5">${sizeStr} &bull; ${new Date(file.timestamp).toLocaleTimeString()}</p>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-100 truncate pr-4">${escapeHtml(file.name)}</p>
+                        <p class="text-[10px] text-slate-500 mt-0.5 font-semibold">${sizeStr} &bull; ${new Date(file.timestamp).toLocaleTimeString()}</p>
                     </div>
                 </div>
-                <div class="flex items-center justify-end gap-2">
-                    <button onclick="openPreviewModal('${file.url}', '${file.name}')" class="bg-slate-800 hover:bg-slate-750 text-slate-300 hover:text-white text-xs px-3 py-2 rounded-lg font-bold transition-all duration-200 flex items-center gap-1.5">
-                        <i class="fa-solid fa-eye"></i> Ver
+                <div class="flex items-center justify-end gap-2 shrink-0">
+                    <button onclick="openPreviewModal('${file.url}', '${file.name}')" class="bg-white/40 hover:bg-white/80 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white text-xs px-3 py-2 rounded-lg font-bold transition-all duration-200 flex items-center gap-1.5 border border-slate-200/60 dark:border-transparent shadow-sm">
+                        <i class="fa-solid fa-eye text-blue-500"></i> Ver
                     </button>
                     <button onclick="triggerDownload('${file.url}', '${file.name}', this)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3.5 py-2 rounded-lg font-bold transition-all duration-200 flex items-center gap-1.5 shadow-lg shadow-blue-600/10 hover:shadow-blue-500/20">
                         <i class="fa-solid fa-circle-down"></i> Descargar
@@ -1033,6 +1046,7 @@
             }
         }
 
+        // Conversor de Bytes a formato amigable
         function formatBytes(bytes, decimals = 2) {
             if (bytes === 0) return '0 Bytes';
             const k = 1024;
@@ -1042,6 +1056,7 @@
             return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
         }
 
+        // Iconografía correspondiente al formato del archivo
         function getFileIcon(filename) {
             const ext = filename.split('.').pop().toLowerCase();
             switch(ext) {
@@ -1057,6 +1072,7 @@
             }
         }
 
+        // Alertas Toast personalizadas
         function showToast(title, message, themeColor = "blue") {
             const toast = document.getElementById('notification-toast');
             const tTitle = document.getElementById('notification-title');
@@ -1067,27 +1083,27 @@
             tMsg.textContent = message;
 
             toast.className = "fixed bottom-6 right-6 z-50 transform transition-all duration-300 pointer-events-none";
-            tIcon.className = "w-8 h-8 rounded-full flex items-center justify-center shrink-0";
+            tIcon.className = "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-inner";
 
             if (themeColor === "red") {
                 toast.classList.add('translate-y-0', 'opacity-100');
                 toast.firstChild.className = "glass-panel border-l-4 border-red-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
-                tIcon.classList.add('bg-red-500/15', 'text-red-400');
-                tIcon.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+                tIcon.classList.add('bg-red-500/15', 'text-red-500', 'dark:text-red-400');
+                tIcon.innerHTML = '<i class="fa-solid fa-circle-exclamation animate-bounce"></i>';
             } else if (themeColor === "emerald") {
                 toast.classList.add('translate-y-0', 'opacity-100');
                 toast.firstChild.className = "glass-panel border-l-4 border-emerald-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
-                tIcon.classList.add('bg-emerald-500/15', 'text-emerald-400');
+                tIcon.classList.add('bg-emerald-500/15', 'text-emerald-600', 'dark:text-emerald-400');
                 tIcon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
             } else if (themeColor === "indigo") {
                 toast.classList.add('translate-y-0', 'opacity-100');
                 toast.firstChild.className = "glass-panel border-l-4 border-indigo-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
-                tIcon.classList.add('bg-indigo-500/15', 'text-indigo-400');
+                tIcon.classList.add('bg-indigo-500/15', 'text-indigo-600', 'dark:text-indigo-400');
                 tIcon.innerHTML = '<i class="fa-solid fa-satellite-dish"></i>';
             } else {
                 toast.classList.add('translate-y-0', 'opacity-100');
                 toast.firstChild.className = "glass-panel border-l-4 border-blue-500 shadow-2xl rounded-r-xl px-5 py-4 flex items-center gap-3 max-w-sm";
-                tIcon.classList.add('bg-blue-500/15', 'text-blue-400');
+                tIcon.classList.add('bg-blue-500/15', 'text-blue-600', 'dark:text-blue-400');
                 tIcon.innerHTML = '<i class="fa-solid fa-info"></i>';
             }
 
@@ -1097,6 +1113,7 @@
             }, 4000);
         }
 
+        // Sanitización rápida de HTML
         function escapeHtml(str) {
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
